@@ -3,7 +3,7 @@
 *.bak
 CMakeLists.txt.user
 
-*/build
+*build
 
-*/.idea
-*/cmake-build-debug
+*.idea
+*cmake-build-debug
