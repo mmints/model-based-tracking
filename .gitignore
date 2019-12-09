@@ -1,0 +1,9 @@
+/BUILD_*/
+*~
+*.bak
+CMakeLists.txt.user
+
+*/build
+
+*/.idea
+*/cmake-build-debug
