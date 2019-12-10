@@ -26,3 +26,7 @@ int mt::Particle::getIndex() {
 glm::mat4 mt::Particle::getModelMatrix() {
     return m_modelMatrix;
 }
+
+void mt::Particle::setModelMatrix(glm::mat4 model_matrix) {
+    m_modelMatrix = model_matrix;
+}

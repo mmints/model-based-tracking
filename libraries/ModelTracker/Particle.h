@@ -6,11 +6,6 @@
 namespace mt
 {
 
-enum ParticleType
-{
-    WIREFRAME
-};
-
 class Particle
 {
 private:
@@ -25,8 +20,9 @@ public:
 
     float getWeight();
     int getIndex();
-    glm::mat4 getModelMatrix();
 
+    glm::mat4 getModelMatrix();
+    void setModelMatrix(glm::mat4 model_matrix);
 };
 
 }
