@@ -1,16 +1,15 @@
 #include "ParticleGenerator.h"
 
-mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, glm::vec2 frame_resolution) {
+mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, int frame_resolution_width, int frame_resolution_height) {
     m_model = new CVK::Node("model", path_to_model);
     m_particle_count = particle_count;
-    m_frame_resolution = frame_resolution;
+    m_frame_resolution_width = frame_resolution_width;
+    m_frame_resolution_height = frame_resolution_height;
 }
 
 void mt::ParticleGenerator::generateLinearDistributedRotationMatrix(glm::vec3 &random_angle) {
-
     glm::vec3 min_angle = glm::vec3(0.f);
     glm::vec3 max_angle = glm::vec3(2 * M_PI);
-
     random_angle = glm::linearRand(min_angle, max_angle);
 }
 
@@ -28,13 +27,14 @@ void mt::ParticleGenerator::initializeParticles(std::vector<Particle> &particles
     }
 }
 
-void mt::ParticleGenerator::renderParticleTextureGrid(int size_x, int size_y, std::vector<Particle> &particles) {
-    int vpWidth = m_frame_resolution.x/size_x;
-    int vpHeight = m_frame_resolution.y/size_y;
+void mt::ParticleGenerator::renderParticleTextureGrid(std::vector<Particle> &particles) {
+    int dimension = std::sqrt(m_particle_count);
+    int vpWidth = m_frame_resolution_width/dimension;
+    int vpHeight = m_frame_resolution_height/dimension;
 
     int i = 0;
-    for (int x = 0; x < size_x; x++) {
-        for (int y = 0; y < size_y; y++) {
+    for (int x = 0; x < dimension; x++) {
+        for (int y = 0; y < dimension; y++) {
             glViewport(vpWidth * x, vpHeight * y, vpWidth, vpHeight);
             m_model->setModelMatrix(particles[i].getModelMatrix());
             m_model->render();
