@@ -28,16 +28,10 @@ void resizeCallback( GLFWwindow *window, int w, int h)
 }
 
 CVK::Node *cube_node = nullptr;
-CVK::Node *screen_filling_quad = nullptr;
 void initScene()
 {
     cube_node = new CVK::Node("rubiksCube", RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj");
     cube_node->setModelMatrix(glm::scale(glm::mat4(1.f), glm::vec3(0.3f)));
-
-    CVK::Plane quad(glm::vec3(-1.f, 1.f, 0.f),glm::vec3(-1.f, -1.f, 0.f), glm::vec3(1.f, -1.f, 0.f), glm::vec3(1.f, 1.f, 0.f));
-    screen_filling_quad = new CVK::Node("screen_filling_quad");
-    screen_filling_quad->setGeometry(&quad);
-
 }
 
 int main()

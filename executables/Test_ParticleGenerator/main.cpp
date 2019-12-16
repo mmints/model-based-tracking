@@ -1,86 +1,73 @@
-#include <vector>
 #include <CVK_2/CVK_Framework.h>
 #include <Shader/ShaderSimple.h>
 #include <ModelTracker/ModelTracker.h>
 
+#define WIDTH 1920
+#define HEIGHT 1080
 
-// Window
-const int width = 1280;
-const int height = 720;
 GLFWwindow* window;
-
-// Resource declaration
-GLuint imageTex;
 
 int main()
 {
-    glfwInit(); // Initial GLFW object for using GLFW functionalities
-
-    //Init Window
-    window = glfwCreateWindow(width, height, "ZED Introduction", NULL, NULL);
-    glfwSetWindowPos( window, 50, 50);
+    glfwInit();
+    CVK::useOpenGL33CoreProfile();
+    window = glfwCreateWindow(WIDTH, HEIGHT, "[TEST] Particle Generator", nullptr, nullptr);
+    glfwSetWindowPos( window, 100, 50);
     glfwMakeContextCurrent(window);
-
     glewInit();
+    glEnable(GL_DEPTH_TEST);
+
+    CVK::State::getInstance()->setBackgroundColor(BLACK);
+    glm::vec3 BgCol = CVK::State::getInstance()->getBackgroundColor();
+    glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
 
     const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
     CVK::State::getInstance()->setShader( &shaderSimple);
 
-    const char *shadernames2[1] = {SHADERS_PATH "/DisplayTexture.frag"};
-    ShaderSimple displayTextureShader(FRAGMENT_SHADER_BIT, shadernames2);
+    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
+    CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture );
 
-    mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", 100, glm::vec2(width, height));
-    std::vector<mt::Particle> particle;
-    particleGenerator.initializeParticles(particle);
+    CVK::FBO fbo( WIDTH, HEIGHT, 1, true );
 
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &imageTex);
-    glBindTexture(GL_TEXTURE_2D, imageTex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
+    mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", 256, WIDTH, HEIGHT);
+    std::vector<mt::Particle> particles;
+    particleGenerator.initializeParticles(particles, 1.8f);
 
-    shaderSimple.useProgram();
-    CVK::FBO fbo(width, height, 1, true, false);
-    fbo.bind();
-    particleGenerator.renderParticleTextureGrid(10, 10, particle);
-    fbo.getColorTexture(imageTex);
-    fbo.unbind();
+    // set up the location of matrices in shader program
+    GLuint viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
+    GLuint projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WIDTH/HEIGHT, 1.0f, 100.0f);
 
-    // Set the uniform variable for texImage (sampler2D) to the texture unit
-    glUniform1i(glGetUniformLocation(displayTextureShader.getProgramID(), "texImage"), 0);
-
-    while( !glfwWindowShouldClose(window))
+    while(!glfwWindowShouldClose( window))
     {
-        ////  OpenGL rendering part ////
-        glEnable(GL_DEPTH_TEST);
-        glLoadIdentity(); // replace the current matrix with the identity matrix (Why?)
+        // First Renderpass to FBO
+        fbo.bind();
+        shaderSimple.useProgram();
+        // pipe uniform variables to shader
+        glUniformMatrix4fv(viewMatrixHandle, 1, GL_FALSE, value_ptr(viewMatrix));
+        glUniformMatrix4fv(projectionMatrixHandle, 1, GL_FALSE, value_ptr(projectionMatrix));
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        particleGenerator.renderParticleTextureGrid(particles);
+        glFinish(); // Wait until everything is done.
+        fbo.unbind();
 
-        glBindTexture(GL_TEXTURE_2D, imageTex);
-        displayTextureShader.useProgram();
+        glViewport(0, 0, WIDTH, HEIGHT);
+        // Second Renderpass to Screen Filling Quad
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        simpleTextureShader.setTextureInput( 0, fbo.getColorTexture ( 0 ) );
+        simpleTextureShader.useProgram();
+        simpleTextureShader.update ();
+        simpleTextureShader.render ();
 
-        // Render the final texture
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(-1.0, -1.0);
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(1.0, -1.0);
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(1.0, 1.0);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(-1.0, 1.0);
-        glEnd();
-
-        glfwSwapBuffers(window);
+        glfwSwapBuffers( window);
         glfwPollEvents();
     }
-    glDeleteProgram(displayTextureShader.getProgramID());
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow( window);
     glfwTerminate();
     return 0;
 }
