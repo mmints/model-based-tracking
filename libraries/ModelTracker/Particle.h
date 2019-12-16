@@ -2,6 +2,7 @@
 #define CVK_2_PARTICLE_H
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace mt
 {
@@ -11,11 +12,12 @@ class Particle
 private:
     float m_weight;
     int m_index;
-    glm::mat4 m_modelMatrix;
+    glm::vec3 m_translation_vector;
+    glm::mat4 m_rotation_matrix;
 
 public:
     Particle(int index);
-    Particle(int index, float weight, glm::mat4 modelMatrix);
+    Particle(int index, float weight, glm::vec3 m_translation_vector, glm::mat4 m_roatition_matrix);
     ~Particle();
 
     float getWeight();
@@ -26,7 +28,5 @@ public:
 };
 
 }
-
-
 
 #endif //CVK_2_PARTICLE_H
