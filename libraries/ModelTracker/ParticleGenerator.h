@@ -33,7 +33,7 @@ public:
 
     void renderParticleTextureGrid(std::vector<Particle> &particles);
 
-    void updateParticles(std::vector<Particle> &particles); // TODO: Implement
+    void updateParticles(std::vector<Particle> &particles);
 };
 }
 

@@ -22,6 +22,10 @@ public:
     float getWeight();
     int getIndex();
 
+    glm::vec3 getTranslation();
+    glm::vec3 getRotation();
+
+    void setModelMatrix(glm::vec3 translation_vector, glm::vec3 rotation_angles);
     glm::mat4 getModelMatrix();
 };
 

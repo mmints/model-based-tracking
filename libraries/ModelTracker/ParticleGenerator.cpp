@@ -44,13 +44,14 @@ void mt::ParticleGenerator::renderParticleTextureGrid(std::vector<Particle> &par
 }
 
 void mt::ParticleGenerator::updateParticles(std::vector<Particle> &particles) {
-    // TODO: Implement
     glm::vec3 translation;
-    glm::mat4 model_matrix;
+    glm::vec3 rotation_angles;
 
     for (int i = 0; i < m_particle_count; i++)
     {
-        // ...
+        // TODO: What is the correct Deviation for the update function?
+        translation = glm::gaussRand(particles[i].getTranslation(), glm::vec3(0.8f));
+        rotation_angles = glm::gaussRand(particles[i].getRotation(), glm::vec3(0.2f));
+        particles[i].setModelMatrix(translation, rotation_angles);
     }
-
 }

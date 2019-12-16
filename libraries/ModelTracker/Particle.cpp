@@ -33,5 +33,19 @@ glm::mat4 mt::Particle::getModelMatrix() {
     rotation_z = glm::rotate(glm::mat4(1.f), m_rotation_angles.z, glm::vec3(0, 0, 1));
 
     glm::mat4 rotation_matrix = rotation_x * rotation_y * rotation_z;
-    return glm::translate(rotation_matrix, m_translation_vector);
+    glm::mat4 translation_matrix = glm::translate(glm::mat4(1.f), m_translation_vector);
+    return translation_matrix * rotation_matrix;
+}
+
+glm::vec3 mt::Particle::getTranslation() {
+    return m_translation_vector;
+}
+
+glm::vec3 mt::Particle::getRotation() {
+    return m_rotation_angles;
+}
+
+void mt::Particle::setModelMatrix(glm::vec3 translation_vector, glm::vec3 rotation_angles) {
+    m_translation_vector = translation_vector;
+    m_rotation_angles = rotation_angles;
 }
