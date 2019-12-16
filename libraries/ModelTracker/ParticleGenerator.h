@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <GL/glew.h>
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/random.hpp>
@@ -21,14 +22,16 @@ private:
     int m_particle_count;
     glm::vec2 m_frame_resolution;
 
-    void generateLinearRotation(glm::mat4 &rotation_matrix);
-    void generateDistributedModelMatrices(glm::vec3 &mean_pos, float radius, glm::mat4 &model_matrix);
+    void generateLinearDistributedRotationMatrix(glm::mat4 &rotation_matrix);
 
 public:
     ParticleGenerator(std::string path_to_model, int particle_count, glm::vec2 frame_resolution);
-    void initializeParticles(std::vector<Particle> &particles);
-    void updateParticles(std::vector<Particle> &particles);
+
+    void initializeParticles(std::vector<Particle> &particles, float distribution_radius);
+
     void renderParticleTextureGrid(int size_x, int size_y, std::vector<Particle> &particles);
+
+    void updateParticles(std::vector<Particle> &particles); // TODO: Implement
 };
 }
 
