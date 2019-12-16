@@ -22,7 +22,8 @@ private:
     int m_particle_count;
     glm::vec2 m_frame_resolution;
 
-    void generateLinearDistributedRotationMatrix(glm::mat4 &rotation_matrix);
+    void generateLinearDistributedRotationMatrix(glm::vec3 &random_angle);
+    void generateGaussianDistributedRotationMatrix(glm::mat4 &rotation_matrix);
 
 public:
     ParticleGenerator(std::string path_to_model, int particle_count, glm::vec2 frame_resolution);

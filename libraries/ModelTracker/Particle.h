@@ -13,12 +13,11 @@ private:
     float m_weight;
     int m_index;
     glm::vec3 m_translation_vector;
-    glm::mat4 m_rotation_matrix;
+    glm::vec3 m_rotation_angles;
 
 public:
     Particle(int index);
-    Particle(int index, float weight, glm::vec3 translation_vector, glm::mat4 rotation_matrix);
-    ~Particle();
+    Particle(int index, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles);
 
     float getWeight();
     int getIndex();

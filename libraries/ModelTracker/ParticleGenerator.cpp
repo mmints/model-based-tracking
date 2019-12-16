@@ -6,38 +6,24 @@ mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle
     m_frame_resolution = frame_resolution;
 }
 
-void mt::ParticleGenerator::generateLinearDistributedRotationMatrix(glm::mat4 &rotation_matrix) {
-    glm::vec3 axis_x = glm::vec3(1, 0, 0);
-    glm::vec3 axis_y = glm::vec3(0, 1, 0);
-    glm::vec3 axis_z = glm::vec3(0, 0, 1);
+void mt::ParticleGenerator::generateLinearDistributedRotationMatrix(glm::vec3 &random_angle) {
 
-    glm::mat4 rotation_x;
-    glm::mat4 rotation_y;
-    glm::mat4 rotation_z;
-
-    glm::vec3 random_angle;
     glm::vec3 min_angle = glm::vec3(0.f);
     glm::vec3 max_angle = glm::vec3(2 * M_PI);
 
     random_angle = glm::linearRand(min_angle, max_angle);
-
-    rotation_x = glm::rotate(glm::mat4(1.f), random_angle.x, axis_x);
-    rotation_y = glm::rotate(glm::mat4(1.f), random_angle.y, axis_y);
-    rotation_z = glm::rotate(glm::mat4(1.f), random_angle.z, axis_z);
-
-    rotation_matrix = rotation_x * rotation_y * rotation_z;
 }
 
 void mt::ParticleGenerator::initializeParticles(std::vector<Particle> &particles, float distribution_radius) {
     glm::vec3 scene_center = glm::vec3(0.f);
-    glm::mat4 rotation_matrix;
+    glm::vec3 rotation_angles;
     glm::vec3 translation_vector;
 
     for (int i = 0; i < m_particle_count; i++)
     {
-        mt::ParticleGenerator::generateLinearDistributedRotationMatrix(rotation_matrix);
+        mt::ParticleGenerator::generateLinearDistributedRotationMatrix(rotation_angles);
         translation_vector = glm::gaussRand(scene_center, glm::vec3(distribution_radius));
-        mt::Particle particle(i, 0.f, translation_vector, rotation_matrix);
+        mt::Particle particle(i, 0.f, translation_vector, rotation_angles);
         particles.push_back(particle);
     }
 }
