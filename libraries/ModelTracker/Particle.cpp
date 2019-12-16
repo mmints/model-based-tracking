@@ -11,7 +11,7 @@ mt::Particle::Particle(int index)
 mt::Particle::Particle(int index, float weight, glm::vec3 translation_vector, glm::mat4 rotation_matrix) {
     m_index = index;
     m_weight = weight;
-    m_translation_vector = m_translation_vector;
+    m_translation_vector = translation_vector;
     m_rotation_matrix = rotation_matrix;
 }
 

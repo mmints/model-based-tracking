@@ -17,14 +17,13 @@ private:
 
 public:
     Particle(int index);
-    Particle(int index, float weight, glm::vec3 m_translation_vector, glm::mat4 m_roatition_matrix);
+    Particle(int index, float weight, glm::vec3 translation_vector, glm::mat4 rotation_matrix);
     ~Particle();
 
     float getWeight();
     int getIndex();
 
     glm::mat4 getModelMatrix();
-    void setModelMatrix(glm::mat4 model_matrix);
 };
 
 }
