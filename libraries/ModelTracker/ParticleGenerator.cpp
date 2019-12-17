@@ -1,8 +1,15 @@
 #include "ParticleGenerator.h"
 
 mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, int frame_resolution_width, int frame_resolution_height) {
-    m_model = new CVK::Node("model", path_to_model);
+
+    if ((int)std::pow((int)std::sqrt(particle_count), 2) != particle_count) {
+        throw std::invalid_argument("[mt::ParticleGenerator::ParticleGenerator] Invalid Particle Count. "
+                                    "Make sure that it is a result of a square operation.");
+    }
+
     m_particle_count = particle_count;
+
+    m_model = new CVK::Node("model", path_to_model);
     m_frame_resolution_width = frame_resolution_width;
     m_frame_resolution_height = frame_resolution_height;
 }
@@ -28,7 +35,7 @@ void mt::ParticleGenerator::initializeParticles(std::vector<Particle> &particles
 }
 
 void mt::ParticleGenerator::renderParticleTextureGrid(std::vector<Particle> &particles) {
-    int dimension = std::sqrt(m_particle_count);
+    int dimension = (int)std::sqrt(m_particle_count);
     int vpWidth = m_frame_resolution_width/dimension;
     int vpHeight = m_frame_resolution_height/dimension;
 
