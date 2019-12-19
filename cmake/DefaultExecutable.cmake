@@ -21,7 +21,7 @@ include_directories(
 )
 
 file(GLOB_RECURSE SOURCES *.cpp *.cu)
-file(GLOB_RECURSE HEADER *.h)
+file(GLOB_RECURSE HEADER *.h *.cuh)
 
 add_definitions(-DSHADERS_PATH="${SHADERS_PATH}")
 add_definitions(-DRESOURCES_PATH="${RESOURCES_PATH}")
