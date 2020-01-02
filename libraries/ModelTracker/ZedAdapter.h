@@ -5,7 +5,8 @@
 
 namespace mt // model based tracking
 {
-    void initBasicZedCameraHD720(sl::Camera* zed);
+    void initBasicZedCameraHD720(sl::Camera &zed);
+    void initSVOZedCamera(sl::Camera &zed, const char* path_to_file);
 }
 
 #endif //MODEL_BASED_TRACKER_ZED_HELPER_H

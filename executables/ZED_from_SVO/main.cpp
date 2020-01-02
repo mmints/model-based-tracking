@@ -8,6 +8,7 @@
 // ZED
 #include <sl/Camera.hpp>
 #include <Shader/ShaderSimple.h>
+#include <ModelTracker/ZedAdapter.h>
 
 using namespace sl;
 
@@ -40,6 +41,7 @@ int main(int argc, char **argv)
     // Create shader program that uses the switchRedAndBlue fragment shader
     const char *shadernames[1] = {SHADERS_PATH "/SwitchRedAndBlue.frag"};
     ShaderSimple shaderSimple( FRAGMENT_SHADER_BIT, shadernames);
+/*
 
     // Init ZED Camera with SVO input file
     InitParameters initParameters;
@@ -51,6 +53,16 @@ int main(int argc, char **argv)
     if (err != SUCCESS) {
         zed.close();
         return -1;
+    }
+*/
+
+    if (argv[1]) {
+        printf("##### Load from file \n");
+        mt::initSVOZedCamera(zed, argv[1]);
+    }
+    else {
+        printf("###### Load Camera \n");
+        mt::initBasicZedCameraHD720(zed);
     }
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
