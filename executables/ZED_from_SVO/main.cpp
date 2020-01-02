@@ -41,29 +41,9 @@ int main(int argc, char **argv)
     // Create shader program that uses the switchRedAndBlue fragment shader
     const char *shadernames[1] = {SHADERS_PATH "/SwitchRedAndBlue.frag"};
     ShaderSimple shaderSimple( FRAGMENT_SHADER_BIT, shadernames);
-/*
 
-    // Init ZED Camera with SVO input file
-    InitParameters initParameters;
-    initParameters.svo_input_filename.set(argv[1]);
-    initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
-    ERROR_CODE err = zed.open(initParameters);
-
-    // ERRCODE display
-    if (err != SUCCESS) {
-        zed.close();
-        return -1;
-    }
-*/
-
-    if (argv[1]) {
-        printf("##### Load from file \n");
-        mt::initSVOZedCamera(zed, argv[1]);
-    }
-    else {
-        printf("###### Load Camera \n");
-        mt::initBasicZedCameraHD720(zed);
-    }
+    // Init ZED Camera or SVO input file
+    mt::initZedCamera(zed, argv[1]);
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
     glEnable(GL_TEXTURE_2D);

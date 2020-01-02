@@ -29,3 +29,16 @@ void mt::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
         zed.close();
     }
 }
+
+void mt::initZedCamera(sl::Camera &zed, const char *path_to_file) {
+
+    if (path_to_file) {
+        printf("##### Load from file \n");
+        mt::initSVOZedCamera(zed, path_to_file);
+    }
+    else {
+        printf("###### Load Camera \n");
+        mt::initBasicZedCameraHD720(zed);
+    }
+
+}
