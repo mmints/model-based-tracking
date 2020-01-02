@@ -3,13 +3,22 @@
 #include <ModelTracker/ModelTracker.h>
 #include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 #include <cuda_gl_interop.h>
+#include <sl/Camera.hpp>
 
 #include "kernel.h"
 
 #define WIDTH 100
 #define HEIGHT 100
 
+using namespace sl;
+
 GLFWwindow* window;
+
+
+Camera zed;
+Mat gpuLeftImage;
+Mat outImage = Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+
 
 // Set up all necessary shader and use the Particle Generator to create a geometry, that will be
 // rendered into tha Color Buffer of ang given FBO
@@ -74,7 +83,7 @@ int main()
     renderIntoFBO(fbo, 1);
 
     // CUDA interopertion part
-    HANDLE_CUDA_ERROR(cudaGLSetGLDevice(0));
+    //HANDLE_CUDA_ERROR(cudaGLSetGLDevice(0));
 
     struct cudaGraphicsResource *tex_resource;
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, fbo.getColorTexture(0), GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
@@ -82,17 +91,16 @@ int main()
 
     cudaArray *tex_array;
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&tex_array, tex_resource, 0, 0));
-
-    callKernel(WIDTH, HEIGHT, tex_array);
-
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &tex_resource));
 
 
 
-    renderToScreen(fbo.getColorTexture(0));
 
     while(!glfwWindowShouldClose( window))
     {
+
+        renderToScreen(fbo.getColorTexture(0));
+
         glfwSwapBuffers( window);
         glfwPollEvents();
     }
