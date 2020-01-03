@@ -10,6 +10,8 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
+#define PARTICLE_COUNT 400
+
 using namespace sl;
 
 GLFWwindow* window;
@@ -37,15 +39,9 @@ void initGL()
 
 // Set up all necessary shader and use the Particle Generator to create a geometry, that will be
 // rendered into tha Color Buffer of ang given FBO
-void renderIntoFBO(CVK::FBO &fbo, int particle_count)
+void renderParticlesIntoFBO(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleGenerator &particleGenerator, std::vector<mt::Particle> &particles)
 {
-    const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
-    ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
     CVK::State::getInstance()->setShader( &shaderSimple);
-
-    mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", particle_count, WIDTH, HEIGHT);
-    std::vector<mt::Particle> particles;
-    particleGenerator.initializeParticles(particles, 1.8f);
 
     // set up the location of matrices in shader program
     GLuint viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
@@ -66,12 +62,9 @@ void renderIntoFBO(CVK::FBO &fbo, int particle_count)
     fbo.unbind();
 }
 
-// Renders the first Color Buffer of the given FBO onto a screen filling quad.
-void renderTextureToScreen(GLuint textureID)
+// Renders texture onto a screen filling quad.
+void renderTextureToScreen(GLuint textureID, CVK::ShaderSimpleTexture &simpleTextureShader)
 {
-    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
-    CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture );
-
     glViewport(0, 0, WIDTH, HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     simpleTextureShader.setTextureInput(0, textureID);
@@ -84,8 +77,19 @@ int main()
 {
     initGL();
 
-    CVK::FBO fbo( WIDTH, HEIGHT, 1, true );
-    renderIntoFBO(fbo, 1);
+    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
+    CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
+
+    const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
+    ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
+
+    mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", PARTICLE_COUNT, WIDTH, HEIGHT);
+    std::vector<mt::Particle> particles;
+    particleGenerator.initializeParticles(particles, 1.8f);
+
+    CVK::FBO fbo( WIDTH, HEIGHT, 1, true);
+    renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
+
 
     // CUDA interopertion part
     struct cudaGraphicsResource *tex_resource;
@@ -96,7 +100,7 @@ int main()
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&tex_array, tex_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &tex_resource));
 
-    renderTextureToScreen(fbo.getColorTexture(0));
+    renderTextureToScreen(fbo.getColorTexture(0), simpleTextureShader);
     callKernel(WIDTH, HEIGHT, tex_array);
 
     while(!glfwWindowShouldClose( window))
