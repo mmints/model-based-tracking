@@ -26,7 +26,7 @@ Mat outImage = Mat(width, height, MAT_TYPE_8U_C1, MEM_GPU);
 GLuint imageTex; // map the ZED camera frame onto this texture for displaying
 cudaGraphicsResource* pcuImageRes; // Cuda resources for CUDA-OpenGL interoperability
 
-int main()
+int main(int argc, char **argv)
 {
     glfwInit();
     //Init Window
@@ -35,8 +35,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     // Init ZED with default parameter without depth vision
-    mt::initBasicZedCameraHD720(&zed);
-
+    mt::initZedCamera(zed, argv[1]);
     glewInit();
 
     // Create shader program that uses the switchRedAndBlue fragment shader
