@@ -1,7 +1,7 @@
 #include "ParticleGenerator.h"
 
 mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, int frame_resolution_width, int frame_resolution_height) {
-
+    srand(time(0)); // Set a seed for evey new instantiated ParticleGenerator
     if ((int)std::pow((int)std::sqrt(particle_count), 2) != particle_count) {
         throw std::invalid_argument("[mt::ParticleGenerator::ParticleGenerator] Invalid Particle Count. "
                                     "Make sure that it is a result of a square operation.");
