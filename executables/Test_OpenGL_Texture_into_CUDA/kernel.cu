@@ -25,6 +25,7 @@ __global__ void kernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step) {
 
 void callKernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, int width, int height, cudaArray *tex_array)
 {
+/*
     cudaChannelFormatDesc desc;
     HANDLE_CUDA_ERROR(cudaGetChannelDesc(&desc, tex_array));
 
@@ -33,6 +34,7 @@ void callKernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, int width
     printf("CUDA Array channel descriptor, bits per component:\n");
     printf("X %d Y %d Z %d W %d, kind %d\n",
            desc.x,desc.y,desc.z,desc.w,desc.f);
+*/
 
     HANDLE_CUDA_ERROR(cudaBindTextureToArray(tex_ref, tex_array));
 

@@ -9,7 +9,7 @@
 
 #include "kernel.h"
 
-#define WIDTH 128
+#define WIDTH 1280
 #define HEIGHT 720
 
 #define PARTICLE_COUNT 400
@@ -72,7 +72,21 @@ void renderTextureToScreen(GLuint textureID, CVK::ShaderSimpleTexture &simpleTex
 int main()
 {
     initGL();
-    cuInit(0);
+
+    Camera zed;
+    mt::initSVOZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo"); // This breaks the Kernal call for some reason.. err: peer access has not been enabled in .....
+
+    //mt::initBasicZedCameraHD720(zed);
+//    mt::initZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo"); // This breaks the Kernal call for some reason.. err: peer access has not been enabled in .....
+
+    // Because of the errors I try the default way for initialization, to figure out, where the error is
+   // initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
+    // initParameters.sdk_cuda_ctx = 0;
+    //cuCtxGetCurrent(&initParameters.sdk_cuda_ctx);
+
+    //sl::ERROR_CODE err = zed.open(initParameters);// This breaks the Kernel call for some reason.. err: peer access has not been enabled in .....
+    //zed.close();
+    //HANDLE_CUDA_ERROR(cudaDeviceEnablePeerAccess(0,0));
 
     const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
@@ -87,6 +101,8 @@ int main()
     CVK::FBO fbo( WIDTH, HEIGHT, 1, true);
     renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
 
+
+
     // CUDA interopertion part
     struct cudaGraphicsResource *tex_resource;
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, fbo.getColorTexture(0), GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
@@ -95,25 +111,6 @@ int main()
     cudaArray *tex_array;
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&tex_array, tex_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &tex_resource));
-
-
-    Camera zed;
-
-    //mt::initBasicZedCameraHD720(zed);
-    //mt::initZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo"); // This breaks the Kernal call for some reason.. err: peer access has not been enabled in .....
-
-    // Because of the errors I try the default way for initialization, to figure out, where the error is
-    sl::InitParameters initParameters;
-    initParameters.svo_input_filename.set("~/Documents/ZED/HD720_SN11351_13-04-52.svo");
-    initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    cuCtxGetCurrent(&initParameters.sdk_cuda_ctx);
-
-    sl::ERROR_CODE err = zed.open(initParameters);// This breaks the Kernel call for some reason.. err: peer access has not been enabled in .....
-    //zed.close();
-    HANDLE_CUDA_ERROR(cudaDeviceEnablePeerAccess(0,0));
-    callKernel2(WIDTH, HEIGHT, tex_array);
-
-
 
     Mat zed_in_img;
     Mat zed_out_img =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
@@ -129,22 +126,24 @@ int main()
 
     cudaGraphicsResource* zed_resource; // Cuda resources for CUDA-OpenGL interoperability
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&zed_resource, zed_tex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
-    cudaArray *zed_tex_array;
+    cudaArray_t zed_tex_array;
 
     while(!glfwWindowShouldClose( window))
     {
         zed.grab();
         if (zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU) == SUCCESS) {
-            //callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStepBytes(MEM_GPU), WIDTH, HEIGHT, tex_array);
+            // callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStepBytes(MEM_GPU), WIDTH, HEIGHT, tex_array);
             HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &zed_resource, 0));
             HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&zed_tex_array, zed_resource, 0, 0));
             HANDLE_CUDA_ERROR(cudaMemcpy2DToArray(
                     zed_tex_array, 0, 0,
-                    zed_in_img.getPtr<sl::uchar1>(MEM_GPU),
+                    zed_in_img.getPtr<sl::uchar4>(MEM_GPU),
                     zed_in_img.getStepBytes(MEM_GPU),
                     zed_in_img.getWidth() * sizeof(sl::uchar4),
-                    zed_in_img.getHeight(), cudaMemcpyDeviceToDevice
+                    zed_in_img.getHeight(),
+                    cudaMemcpyDeviceToDevice
                     ));
+
             HANDLE_CUDA_ERROR( cudaGraphicsUnmapResources(1, &zed_resource, 0));
         }
 
