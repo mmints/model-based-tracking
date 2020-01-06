@@ -30,7 +30,7 @@ void CVK::FBO::create(int width, int height, int numColorTextures, bool depthTex
 	for(int i = 0; i < numColorTextures; i++)
 	{
 		GLuint colorTextureHandle = createTexture();
-		glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA16F, m_width, m_height, 0,GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA8, m_width, m_height, 0,GL_RGBA, GL_UNSIGNED_BYTE, nullptr); // GL_RGBA16F
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+m_colorTextures.size(), GL_TEXTURE_2D, colorTextureHandle, 0);
 		m_colorTextures.push_back(colorTextureHandle);
 //drawBuffers.push_back(GL_COLOR_ATTACHMENT0+i);
