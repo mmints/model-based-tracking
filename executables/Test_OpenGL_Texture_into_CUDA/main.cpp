@@ -12,7 +12,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 100
 
 using namespace sl;
 
@@ -101,8 +101,6 @@ int main()
     CVK::FBO fbo( WIDTH, HEIGHT, 1, true);
     renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
 
-
-
     // CUDA interopertion part
     struct cudaGraphicsResource *tex_resource;
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, fbo.getColorTexture(0), GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
@@ -112,7 +110,7 @@ int main()
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&tex_array, tex_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &tex_resource));
 
-    Mat zed_in_img;
+    Mat zed_in_img  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
     Mat zed_out_img =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
@@ -128,19 +126,21 @@ int main()
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&zed_resource, zed_tex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
     cudaArray_t zed_tex_array;
 
+    //callKernel2(WIDTH, HEIGHT, tex_array);
+
     while(!glfwWindowShouldClose( window))
     {
         zed.grab();
         if (zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU) == SUCCESS) {
-            // callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStepBytes(MEM_GPU), WIDTH, HEIGHT, tex_array);
+            callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
             HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &zed_resource, 0));
             HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&zed_tex_array, zed_resource, 0, 0));
             HANDLE_CUDA_ERROR(cudaMemcpy2DToArray(
                     zed_tex_array, 0, 0,
-                    zed_in_img.getPtr<sl::uchar4>(MEM_GPU),
-                    zed_in_img.getStepBytes(MEM_GPU),
-                    zed_in_img.getWidth() * sizeof(sl::uchar4),
-                    zed_in_img.getHeight(),
+                    zed_out_img.getPtr<sl::uchar1>(MEM_GPU),
+                    zed_out_img.getStepBytes(MEM_GPU),
+                    zed_out_img.getWidth() * sizeof(sl::uchar4),
+                    zed_out_img.getHeight(),
                     cudaMemcpyDeviceToDevice
                     ));
 
@@ -148,6 +148,7 @@ int main()
         }
 
         renderTextureToScreen(zed_tex, simpleTextureShader);
+//        renderTextureToScreen(fbo.getColorTexture(0), simpleTextureShader);
 
         glfwSwapBuffers( window);
         glfwPollEvents();
