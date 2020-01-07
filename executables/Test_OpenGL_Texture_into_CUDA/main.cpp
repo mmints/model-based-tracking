@@ -1,18 +1,18 @@
 #include <CVK_2/CVK_Framework.h>
+
+#include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 #include <Shader/ShaderSimple.h>
 #include <ModelTracker/ModelTracker.h>
-#include <ErrorHandling/HANDLE_CUDA_ERROR.h>
+
 #include <cuda_gl_interop.h>
 #include <sl/Camera.hpp>
-//#include <cuda.h>
-//#include <cuda_runtime.h>
 
 #include "kernel.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 100
+#define PARTICLE_COUNT 1
 
 using namespace sl;
 
@@ -74,19 +74,7 @@ int main()
     initGL();
 
     Camera zed;
-    mt::initSVOZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo"); // This breaks the Kernal call for some reason.. err: peer access has not been enabled in .....
-
-    //mt::initBasicZedCameraHD720(zed);
-//    mt::initZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo"); // This breaks the Kernal call for some reason.. err: peer access has not been enabled in .....
-
-    // Because of the errors I try the default way for initialization, to figure out, where the error is
-   // initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    // initParameters.sdk_cuda_ctx = 0;
-    //cuCtxGetCurrent(&initParameters.sdk_cuda_ctx);
-
-    //sl::ERROR_CODE err = zed.open(initParameters);// This breaks the Kernel call for some reason.. err: peer access has not been enabled in .....
-    //zed.close();
-    //HANDLE_CUDA_ERROR(cudaDeviceEnablePeerAccess(0,0));
+    mt::initSVOZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo");
 
     const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
@@ -110,6 +98,7 @@ int main()
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&tex_array, tex_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &tex_resource));
 
+    // zed interopertion
     Mat zed_in_img  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
     Mat zed_out_img =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
 
@@ -122,14 +111,15 @@ int main()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    cudaGraphicsResource* zed_resource; // Cuda resources for CUDA-OpenGL interoperability
+    cudaGraphicsResource* zed_resource;
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&zed_resource, zed_tex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
-    cudaArray_t zed_tex_array;
-
-    //callKernel2(WIDTH, HEIGHT, tex_array);
+    cudaArray *zed_tex_array;
 
     while(!glfwWindowShouldClose( window))
     {
+        particleGenerator.updateParticles(particles);
+        renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
+
         zed.grab();
         if (zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU) == SUCCESS) {
             callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
@@ -148,7 +138,6 @@ int main()
         }
 
         renderTextureToScreen(zed_tex, simpleTextureShader);
-//        renderTextureToScreen(fbo.getColorTexture(0), simpleTextureShader);
 
         glfwSwapBuffers( window);
         glfwPollEvents();
