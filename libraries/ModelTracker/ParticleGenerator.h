@@ -20,14 +20,18 @@ class ParticleGenerator
 private:
     CVK::Node *m_model = nullptr;
     int m_particle_count;
-    int m_frame_resolution_width;
-    int m_frame_resolution_height;
+    int m_particle_width;
+    int m_particle_height;
+    int m_grid_resolution_width;
+    int m_grid_resolution_height;
 
     void generateLinearDistributedRotationMatrix(glm::vec3 &random_angle);
     void generateGaussianDistributedRotationMatrix(glm::mat4 &rotation_matrix);
 
 public:
-    ParticleGenerator(std::string path_to_model, int particle_count, int frame_resolution_width, int frame_resolution_height);
+    ParticleGenerator(std::string path_to_model, int particle_count, int particle_width, int particle_height);
+
+    ParticleGenerator();
 
     void initializeParticles(std::vector<Particle> &particles, float distribution_radius);
 
