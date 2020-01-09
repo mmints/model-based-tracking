@@ -12,7 +12,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1
+#define PARTICLE_COUNT 400
 
 using namespace sl;
 
@@ -66,7 +66,7 @@ void renderTextureToScreen(GLuint textureID, CVK::ShaderSimpleTexture &simpleTex
     simpleTextureShader.setTextureInput(0, textureID);
     simpleTextureShader.useProgram();
     simpleTextureShader.update();
-    simpleTextureShader.render();
+    simpleTextureShader.renderZED();
 }
 
 int main()
