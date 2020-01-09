@@ -1,3 +1,5 @@
+#include <CVK_2/CVK_Framework.h>
+
 // OpenGL
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -38,9 +40,8 @@ int main(int argc, char **argv)
 
     glewInit();
 
-    // Create shader program that uses the switchRedAndBlue fragment shader
-    const char *shadernames[1] = {SHADERS_PATH "/SwitchRedAndBlue.frag"};
-    ShaderSimple shaderSimple( FRAGMENT_SHADER_BIT, shadernames);
+    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/BGRtoRGBSimpleTexture.frag" };
+    CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
 
     // Init ZED Camera or SVO input file
     mt::initZedCamera(zed, argv[1]);
@@ -59,14 +60,11 @@ int main(int argc, char **argv)
     // If any error are triggered, exit the program
     if (err1 != 0) return -1;
 
-    // Set the uniform variable for texImage (sampler2D) to the texture unit
-    glUniform1i(glGetUniformLocation(shaderSimple.getProgramID(), "texImage"), 0);
-
     while( !glfwWindowShouldClose(window))
     {
         int res = zed.grab();
 
-        if (zed.retrieveImage(gpuLeftImage, VIEW_DEPTH, MEM_GPU) == SUCCESS) {
+        if (zed.retrieveImage(gpuLeftImage, VIEW_LEFT, MEM_GPU) == SUCCESS) {
             cudaArray_t ArrIm;
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
@@ -76,24 +74,12 @@ int main(int argc, char **argv)
 
         ////  OpenGL rendering part ////
         glEnable(GL_DEPTH_TEST);
-        glLoadIdentity(); // replace the current matrix with the identity matrix (Why?)
+        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-        glBindTexture(GL_TEXTURE_2D, imageTex);
-        shaderSimple.useProgram();
-
-        // Render the final texture
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(-1.0, -1.0);
-        glTexCoord2f(1.0, 1.0);
-        glVertex2f(1.0, -1.0);
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(1.0, 1.0);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(-1.0, 1.0);
-        glEnd();
+        simpleTextureShader.setTextureInput(0, imageTex);
+        simpleTextureShader.useProgram();
+        simpleTextureShader.update();
+        simpleTextureShader.renderZED();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -102,7 +88,6 @@ int main(int argc, char **argv)
     // Clean up
     gpuLeftImage.free();
     zed.close();
-    glDeleteProgram(shaderSimple.getProgramID());
 
     glfwDestroyWindow(window);
     glfwTerminate();
