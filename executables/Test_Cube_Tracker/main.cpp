@@ -12,7 +12,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 16
 
 using namespace sl;
 
