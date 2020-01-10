@@ -19,7 +19,9 @@ public:
     Particle(int index);
     Particle(int index, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles);
 
+    void setWeight(float weight);
     float getWeight();
+
     int getIndex();
 
     glm::vec3 getTranslation();

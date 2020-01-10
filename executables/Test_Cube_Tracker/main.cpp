@@ -167,6 +167,12 @@ int main()
             HANDLE_CUDA_ERROR( cudaGraphicsUnmapResources(1, &zed_resource, 0));
         }
 
+        for (int i = 0; i < PARTICLE_COUNT; i++)
+        {
+            particleGrid.particles[i].setWeight(global_weight_memory[i]);
+            global_weight_memory[i] = 0.f; // fill array with 0.f
+        }
+
         renderTextureToScreen(zed_tex, simpleTextureShader);
 
         glfwSwapBuffers( window);
@@ -174,7 +180,7 @@ int main()
     }
 
     // LOG
-    for (int i = 0; i < PARTICLE_COUNT; i++) printf("%i -> %f \n", i, global_weight_memory[i]);
+    for (int i = 0; i < PARTICLE_COUNT; i++) printf("%i -> %f \n", i, particleGrid.particles[i].getWeight());
 
     HANDLE_CUDA_ERROR(cudaFree(dev_global_weight_memory));
     glfwDestroyWindow( window);
