@@ -1,17 +1,26 @@
 #include "ParticleGenerator.h"
 
-mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, int frame_resolution_width, int frame_resolution_height) {
+mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle_count, int particle_width, int particle_height) {
     srand(time(0)); // Set a seed for evey new instantiated ParticleGenerator
     if ((int)std::pow((int)std::sqrt(particle_count), 2) != particle_count) {
         throw std::invalid_argument("[mt::ParticleGenerator::ParticleGenerator] Invalid Particle Count. "
                                     "Make sure that it is a result of a square operation.");
     }
 
-    m_particle_count = particle_count;
+    if (particle_count > 1000) {
+        throw std::invalid_argument("[mt::ParticleGenerator::ParticleGenerator] Invalid Particle Count. "
+                                    "It is not possible to handle more then 1000 particles.");
+    }
 
+    m_particle_count = particle_count;
     m_model = new CVK::Node("model", path_to_model);
-    m_frame_resolution_width = frame_resolution_width;
-    m_frame_resolution_height = frame_resolution_height;
+
+    m_particle_width = particle_width;
+    m_particle_height = particle_height;
+
+    int dimension = (int)std::sqrt(m_particle_count);
+    m_grid_resolution_width = m_particle_width * dimension;
+    m_grid_resolution_height = m_particle_height * dimension;
 }
 
 void mt::ParticleGenerator::generateLinearDistributedRotationMatrix(glm::vec3 &random_angle) {
@@ -36,13 +45,10 @@ void mt::ParticleGenerator::initializeParticles(std::vector<Particle> &particles
 
 void mt::ParticleGenerator::renderParticleTextureGrid(std::vector<Particle> &particles) {
     int dimension = (int)std::sqrt(m_particle_count);
-    int vpWidth = m_frame_resolution_width/dimension;
-    int vpHeight = m_frame_resolution_height/dimension;
-
     int i = 0;
     for (int x = 0; x < dimension; x++) {
         for (int y = 0; y < dimension; y++) {
-            glViewport(vpWidth * x, vpHeight * y, vpWidth, vpHeight);
+            glViewport(m_particle_width * x, m_particle_height * y, m_particle_width, m_particle_height);
             m_model->setModelMatrix(particles[i].getModelMatrix());
             m_model->render();
             i++;
