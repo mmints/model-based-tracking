@@ -4,5 +4,6 @@
 #include "Particle.h"
 #include "ParticleGenerator.h"
 #include "ZedAdapter.h"
+#include "ParticleGrid.h"
 
 #endif //MODELTRACKER_H
