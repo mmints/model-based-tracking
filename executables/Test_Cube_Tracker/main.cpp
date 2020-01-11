@@ -180,6 +180,7 @@ int main()
     }
 
     // LOG
+    printf("[LOG] Particle Weights: \n");
     for (int i = 0; i < PARTICLE_COUNT; i++) printf("%i -> %f \n", i, particleGrid.particles[i].getWeight());
 
     HANDLE_CUDA_ERROR(cudaFree(dev_global_weight_memory));
