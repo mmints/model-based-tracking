@@ -66,6 +66,18 @@ void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleG
     fbo.unbind();
 
     particleGrid.texture = fbo.getColorTexture(0);
+
+    glBindTexture(GL_TEXTURE_2D, particleGrid.texture);
+    int w, h;
+    int miplevel = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &w);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_HEIGHT, &h);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    printf("PARTICLE GRID TEXTURE \n");
+    printf("WIDTH: %i - SUGGESTED: %i\n", w, WIDTH * PARTICLE_COUNT);
+    printf("HEIGHT: %i - SUGGESTED: %i \n", h, HEIGHT * PARTICLE_COUNT);
+
 }
 
 // Renders texture onto a screen filling quad.
@@ -93,7 +105,9 @@ int main()
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
 
     mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", PARTICLE_COUNT, WIDTH, HEIGHT);
-    CVK::FBO fbo( WIDTH, HEIGHT, 1, true);
+
+    // TODO: DO NOT FORGET: WEIGHT * PARTICLE_COUNT and HEIGHT
+    CVK::FBO fbo( WIDTH * PARTICLE_COUNT, HEIGHT * PARTICLE_COUNT, 1, true);
 
     mt::ParticleGrid particleGrid;
     particleGenerator.initializeParticles(particleGrid.particles, 1.8f);
@@ -134,8 +148,9 @@ int main()
     while(!glfwWindowShouldClose( window))
     {
         // Update particle translation and rotation
-        particleGenerator.updateParticles(particleGrid.particles);
-        renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
+        // TODO: Texture Update is very slow!!!
+/*        particleGenerator.updateParticles(particleGrid.particles);
+        renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);*/
 
         // Transfer ZED input image and particleGrid.texture to Kernel
         zed.grab();
@@ -170,7 +185,7 @@ int main()
         for (int i = 0; i < PARTICLE_COUNT; i++)
         {
             particleGrid.particles[i].setWeight(global_weight_memory[i]);
-            global_weight_memory[i] = 0.f; // fill array with 0.f
+            global_weight_memory[i] = 0.f; // fill array with 0.f - clean up
         }
 
         renderTextureToScreen(zed_tex, simpleTextureShader);
