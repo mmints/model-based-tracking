@@ -8,6 +8,17 @@
 
 texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
+// A super simple likelihood function that compares two pixels and sets a weight
+// calculate the difference between every channel and create on this way a weight
+__device__ void likelihood(float &weight, const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel) {
+    if (particle_pixel.x < zed_pixel.z || particle_pixel.y < zed_pixel.y || particle_pixel.z < zed_pixel.x) {
+        weight = 1.f;
+    }
+    else {
+        weight = 0.f;
+    }
+}
+
 __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, float *global_weight_memory) {
 
     // Get the texel value from particleGrid.texture (parts as particle_grid_texture_ref)
@@ -20,11 +31,16 @@ __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *ze
     uint32_t zed_y = particle_grid_texture_y % height;
     uint32_t offset = zed_x + zed_y * step; // Flat coordinate to memory space
 
-    uchar4 texel_value = tex2D(particle_grid_texture_ref, zed_x, zed_y);
-    uchar4 texel_value_2 = tex2D(particle_grid_texture_ref, zed_x + width, zed_y); // switch 1 particle to right
+    uchar4 particle_grid_texel_value = tex2D(particle_grid_texture_ref, zed_x, zed_y);
+    uchar4 particle_grid_texel_value_2 = tex2D(particle_grid_texture_ref, zed_x + width, zed_y);
 
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / width) + (int)(particle_grid_texture_y / height) * PARTICLE;
+
+    // Calculate the weight of the current pixel
+/*    float weight = 0.f;
+    likelihood(weight, particle_grid_texel_value, zed_in[offset]);
+    atomicAdd(&global_weight_memory[particle_index],weight);*/
 
     // Write dummy data into global_weight_memory for testing
     if (global_weight_memory[particle_index] == 0.f)
@@ -32,18 +48,30 @@ __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *ze
         global_weight_memory[particle_index] = (float) particle_index;
     }
 
-    bool cube_1 = (texel_value.x == 0 && texel_value.y == 0 && texel_value.z == 0);
+    // VISUALISATION
+    bool cube = (particle_grid_texel_value.x == 0 && particle_grid_texel_value.y == 0 && particle_grid_texel_value.z == 0);
+    bool cube2 = (particle_grid_texel_value_2.x == 0 && particle_grid_texel_value_2.y == 0 && particle_grid_texel_value_2.z == 0);
 
-    if (cube_1) {
+    if (cube && cube2) {
         zed_out[offset].x = zed_in[offset].z;
         zed_out[offset].y = zed_in[offset].y;
         zed_out[offset].z = zed_in[offset].x;
         return;
     }
 
-    zed_out[offset].x = texel_value.x;
-    zed_out[offset].y = texel_value.y;
-    zed_out[offset].z = texel_value.z;
+    if (cube) {
+        zed_out[offset].x = particle_grid_texel_value_2.x;
+        zed_out[offset].y = particle_grid_texel_value_2.y;
+        zed_out[offset].z = particle_grid_texel_value_2.z;
+        return;
+    }
+
+    if (cube2) {
+        zed_out[offset].x = particle_grid_texel_value.x;
+        zed_out[offset].y = particle_grid_texel_value.y;
+        zed_out[offset].z = particle_grid_texel_value.z;
+        return;
+    }
 }
 
 void callKernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, int width, int height, cudaArray *particle_grid_tex_array, float *dev_global_weight_memory)
