@@ -4,6 +4,6 @@
 CMakeLists.txt.user
 
 *build
-
+*release
 *.idea
 *cmake-build-debug
