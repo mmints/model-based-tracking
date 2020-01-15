@@ -4,7 +4,7 @@
 #include "kernel.h"
 #include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 
-#define PARTICLE 4
+#define PARTICLE 32
 
 texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
@@ -27,8 +27,8 @@ __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *ze
     uint32_t particle_grid_texture_y = threadIdx.y + blockIdx.y * blockDim.y;
 
     // Transfer texel coordinate to ZED pixel coordinates
-    uint32_t zed_x = particle_grid_texture_x % width;
-    uint32_t zed_y = particle_grid_texture_y % height;
+    uint32_t zed_x = (particle_grid_texture_x % width) * 2;//(zed_width/width);
+    uint32_t zed_y = (particle_grid_texture_y % height) * 2;
     uint32_t offset = zed_x + zed_y * step; // Flat coordinate to memory space
 
     uchar4 particle_grid_texel_value = tex2D(particle_grid_texture_ref, zed_x, zed_y);
@@ -38,9 +38,9 @@ __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *ze
     int particle_index = (int)(particle_grid_texture_x / width) + (int)(particle_grid_texture_y / height) * PARTICLE;
 
     // Calculate the weight of the current pixel
-/*    float weight = 0.f;
+    float weight = 0.f;
     likelihood(weight, particle_grid_texel_value, zed_in[offset]);
-    atomicAdd(&global_weight_memory[particle_index],weight);*/
+    atomicAdd(&global_weight_memory[particle_index],weight);
 
     // Write dummy data into global_weight_memory for testing
     if (global_weight_memory[particle_index] == 0.f)

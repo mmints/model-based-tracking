@@ -9,10 +9,13 @@
 
 #include "kernel.h"
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define ZED_WIDTH 1280
+#define ZED_HEIGHT 720
 
-#define PARTICLE_COUNT 16
+#define WIDTH 1280 / 2
+#define HEIGHT 720 / 2
+
+#define PARTICLE_COUNT 32*32
 
 using namespace sl;
 
@@ -22,7 +25,7 @@ void initGL()
 {
     glfwInit();
     CVK::useOpenGL33CoreProfile();
-    window = glfwCreateWindow(WIDTH, HEIGHT, "[TEST] OpenGL Texture into CUDA", nullptr, nullptr);
+    window = glfwCreateWindow(ZED_WIDTH, ZED_HEIGHT, "[TEST] OpenGL Texture into CUDA", nullptr, nullptr);
     glfwSetWindowPos( window, 100, 50);
     glfwMakeContextCurrent(window);
     glewInit();
@@ -39,20 +42,17 @@ void generateGlTexture(GLuint &tex)
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ZED_WIDTH, ZED_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+glm::mat4 viewMatrix;
+glm::mat4 projectionMatrix;
+GLuint viewMatrixHandle;
+GLuint projectionMatrixHandle;
 void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleGenerator &particleGenerator,mt::ParticleGrid &particleGrid)
 {
     CVK::State::getInstance()->setShader( &shaderSimple);
-
-    // set up the location of matrices in shader program
-    GLuint viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
-    GLuint projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
-
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WIDTH/HEIGHT, 1.0f, 100.0f);
 
     fbo.bind();
     shaderSimple.useProgram();
@@ -62,12 +62,12 @@ void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleG
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     particleGenerator.renderParticleTextureGrid(particleGrid.particles);
-    glFinish(); // Wait until everything is done.
+    //glFinish(); // Wait until everything is done.
     fbo.unbind();
 
     particleGrid.texture = fbo.getColorTexture(0);
 
-    glBindTexture(GL_TEXTURE_2D, particleGrid.texture);
+/*    glBindTexture(GL_TEXTURE_2D, particleGrid.texture);
     int w, h;
     int miplevel = 0;
     glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &w);
@@ -75,15 +75,14 @@ void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleG
     glBindTexture(GL_TEXTURE_2D, 0);
 
     printf("PARTICLE GRID TEXTURE \n");
-    printf("WIDTH: %i - SUGGESTED: %i\n", w, WIDTH * PARTICLE_COUNT);
-    printf("HEIGHT: %i - SUGGESTED: %i \n", h, HEIGHT * PARTICLE_COUNT);
-
+    printf("WIDTH: %i - SUGGESTED: %f \n", w, WIDTH * std::sqrt(PARTICLE_COUNT));
+    printf("HEIGHT: %i - SUGGESTED: %f \n", h, HEIGHT * std::sqrt(PARTICLE_COUNT));*/
 }
 
 // Renders texture onto a screen filling quad.
 void renderTextureToScreen(GLuint textureID, CVK::ShaderSimpleTexture &simpleTextureShader)
 {
-    glViewport(0, 0, WIDTH, HEIGHT);
+    glViewport(0, 0, ZED_WIDTH, ZED_HEIGHT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     simpleTextureShader.setTextureInput(0, textureID);
     simpleTextureShader.useProgram();
@@ -94,6 +93,7 @@ void renderTextureToScreen(GLuint textureID, CVK::ShaderSimpleTexture &simpleTex
 int main()
 {
     initGL();
+    printf("*** START OF %i PARTICLES *** \n", PARTICLE_COUNT);
 
     Camera zed;
     mt::initSVOZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo");
@@ -104,10 +104,17 @@ int main()
     const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
 
+    // set up the location of matrices in shader program
+    viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
+    projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
+
+    viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WIDTH/HEIGHT, 1.0f, 100.0f);
+
     mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", PARTICLE_COUNT, WIDTH, HEIGHT);
 
     // TODO: DO NOT FORGET: WEIGHT * PARTICLE_COUNT and HEIGHT
-    CVK::FBO fbo( WIDTH * PARTICLE_COUNT, HEIGHT * PARTICLE_COUNT, 1, true);
+    CVK::FBO fbo( WIDTH * std::sqrt(PARTICLE_COUNT), HEIGHT * std::sqrt(PARTICLE_COUNT), 1, true);
 
     mt::ParticleGrid particleGrid;
     particleGenerator.initializeParticles(particleGrid.particles, 1.8f);
@@ -123,8 +130,8 @@ int main()
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &particle_grid_resource));
 
     // zed interopertion
-    Mat zed_in_img  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
-    Mat zed_out_img =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat zed_in_img  =  Mat(ZED_WIDTH, ZED_HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat zed_out_img =  Mat(ZED_WIDTH, ZED_HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
     GLuint zed_tex;
@@ -149,8 +156,16 @@ int main()
     {
         // Update particle translation and rotation
         // TODO: Texture Update is very slow!!!
-/*        particleGenerator.updateParticles(particleGrid.particles);
-        renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);*/
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        particleGenerator.updateParticles(particleGrid.particles);
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+
+        std::cout << duration <<std::endl;
+        renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
 
         // Transfer ZED input image and particleGrid.texture to Kernel
         zed.grab();
