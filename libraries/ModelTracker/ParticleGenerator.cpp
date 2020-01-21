@@ -7,11 +7,6 @@ mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle
                                     "Make sure that it is a result of a square operation.");
     }
 
-    if (particle_count > 1000) {
-        throw std::invalid_argument("[mt::ParticleGenerator::ParticleGenerator] Invalid Particle Count. "
-                                    "It is not possible to handle more then 1000 particles.");
-    }
-
     m_particle_count = particle_count;
     m_model = new CVK::Node("model", path_to_model);
 

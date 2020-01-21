@@ -15,6 +15,10 @@ mt::Particle::Particle(int index, float weight, glm::vec3 translation_vector, gl
     m_rotation_angles = rotation_angles;
 }
 
+void mt::Particle::setWeight(float weight) {
+    m_weight = weight;
+}
+
 float mt::Particle::getWeight() {
     return m_weight;
 }
