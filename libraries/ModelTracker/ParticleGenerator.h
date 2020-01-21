@@ -30,6 +30,7 @@ private:
 
 public:
     ParticleGenerator(std::string path_to_model, int particle_count, int particle_width, int particle_height);
+    ParticleGenerator(int particle_count, int particle_width, int particle_height);
 
     ParticleGenerator();
 
@@ -38,6 +39,7 @@ public:
     void renderParticleTextureGrid(std::vector<Particle> &particles);
 
     void updateParticles(std::vector<Particle> &particles);
+    void updateParticles(std::vector<Particle> &particles, float translation_deviation, float rotation_deviation);
 };
 }
 
