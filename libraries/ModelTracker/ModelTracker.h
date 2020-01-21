@@ -6,4 +6,6 @@
 #include "ZedAdapter.h"
 #include "ParticleGrid.h"
 
+#include "helper_functions.h"
+
 #endif //MODELTRACKER_H
