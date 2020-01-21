@@ -45,5 +45,57 @@ GLFWwindow* initGLWindow(GLFWwindow* window, const int width, const int height, 
     return window;
 }
 
+/**
+ * Generates an OpenGL texture.
+ * @param textureID Allocated texture ID
+ * @param width Dimension of the texture
+ * @param height Dimension of the texture
+ */
+void generateGlTexture(GLuint &textureID, const int width, const int height)
+{
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/**
+ * Renders a simple GL texture to a window frame of given dimensions by using a given Shader.
+ * @param textureID Target Texture
+ * @param width Dimension of the texture
+ * @param height Dimension of the texture
+ * @param simpleTextureShader Shader program, that is used to render the texture
+ */
+void renderTextureToScreen(GLuint textureID, const int width, const int height, CVK::ShaderSimpleTexture &simpleTextureShader)
+{
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    simpleTextureShader.setTextureInput(0, textureID);
+    simpleTextureShader.useProgram();
+    simpleTextureShader.update();
+    simpleTextureShader.render();
+}
+
+/**
+ * Renders a ZED video frame that was transform to a GL texture to a window frame of given dimensions by using a given Shader.
+ * The difference to renderTextureToScreen is, that another render function implemented in the shader class is used.
+ * @param textureID Target Texture
+ * @param width Dimension of the texture
+ * @param height Dimension of the texture
+ * @param simpleTextureShader Shader program, that is used to render the texture
+ */
+void renderZEDTextureToScreen(GLuint textureID, const int width, const int height, CVK::ShaderSimpleTexture &simpleTextureShader)
+{
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    simpleTextureShader.setTextureInput(0, textureID);
+    simpleTextureShader.useProgram();
+    simpleTextureShader.update();
+    simpleTextureShader.renderZED();
+}
+
+
 
 #endif //MT_HELPER_FUNCTIONS_H
