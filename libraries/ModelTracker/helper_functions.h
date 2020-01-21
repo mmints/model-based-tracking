@@ -45,5 +45,21 @@ GLFWwindow* initGLWindow(GLFWwindow* window, const int width, const int height, 
     return window;
 }
 
+/**
+ * Generates an OpenGL texture.
+ * @param textureID Allocated texture ID
+ * @param width Dimension of the texture
+ * @param height Dimension of the texture
+ */
+void generateGlTexture(GLuint &textureID, const int width, const int height)
+{
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 #endif //MT_HELPER_FUNCTIONS_H
