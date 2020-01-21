@@ -14,6 +14,7 @@ namespace kernel
     void meanFilter(sl::uchar1 *d_in, sl::uchar1 *d_out, int width, int height, size_t step, int radius);
     void experimentalFilter(sl::uchar1 *d_in, sl::uchar1 *d_out, int width, int height, size_t step);
     void sobelFilter(sl::uchar1 *d_in, sl::uchar1 *d_out, int width, int height, size_t step);
+    void simpleRedDetector(sl::uchar4 *d_in, sl::uchar4 *d_out, unsigned char threshold, int width, int height, size_t step);
 }
 
 #endif //MODEL_BASED_TRACKER_FILTER_H
