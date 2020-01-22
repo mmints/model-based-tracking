@@ -7,5 +7,6 @@
 #include "ParticleGrid.h"
 
 #include "helper_functions.h"
+#include "kernel_functions.h"
 
 #endif //MODELTRACKER_H

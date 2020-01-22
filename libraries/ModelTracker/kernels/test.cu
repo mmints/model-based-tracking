@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "kernel.h"
+#include "ModelTracker/kernel_functions.h"
 #include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 
 #define PARTICLE 32
@@ -74,7 +74,7 @@ __global__ void kernel(int width, int height, sl::uchar4 *zed_in, sl::uchar4 *ze
     }
 }
 
-void callKernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, int width, int height, cudaArray *particle_grid_tex_array, float *dev_global_weight_memory)
+void mt::testCallKernel(sl::uchar4 *zed_in, sl::uchar4 *zed_out,  size_t step, int width, int height, cudaArray *particle_grid_tex_array, float *dev_global_weight_memory)
 {
     HANDLE_CUDA_ERROR(cudaBindTextureToArray(particle_grid_texture_ref, particle_grid_tex_array));
 
