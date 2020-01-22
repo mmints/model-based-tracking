@@ -4,6 +4,9 @@
 #include <vector>
 #include "Particle.h"
 
+// TODO: Turn the ParticleGrid Struct into a Class
+// TODO: Combine with ParticleGenerator
+
 namespace mt
 {
  /**

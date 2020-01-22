@@ -86,6 +86,7 @@ void renderTextureToScreen(GLuint textureID, const int width, const int height, 
  * @param height Dimension of the texture
  * @param simpleTextureShader Shader program, that is used to render the texture
  */
+ // TODO: Move this function to ParticleGrid after turning ParticleGrid into a Class
 void renderZEDTextureToScreen(GLuint textureID, const int width, const int height, CVK::ShaderSimpleTexture &simpleTextureShader)
 {
     glViewport(0, 0, width, height);

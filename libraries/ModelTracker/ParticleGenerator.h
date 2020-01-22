@@ -15,7 +15,7 @@
 namespace mt
 {
 
-class ParticleGenerator
+class ParticleGenerator     // TODO: Combine with ParticleGrid
 {
 private:
     CVK::Node *m_model = nullptr;
