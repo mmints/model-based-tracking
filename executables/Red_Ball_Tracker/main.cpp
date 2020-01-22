@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     initZedCamera(zed, argv[1]); // If argv[1] is null than the hardware camera setting will be loaded
     printf("[LOG] Initialize ZED \n");
 
-    const char *shadernamesTextureToScreen [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
+    const char *shadernamesTextureToScreen [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };      // Attention: ZED image will stay BGR! Make sure to switch texel values in Kernel
     CVK::ShaderSimpleTexture textureToScreen( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesTextureToScreen);
     printf("[LOG] textureToScreen is loaded \n");
 
@@ -71,24 +71,29 @@ int main(int argc, char **argv)
     printf("[LOG] shaderSimple is loaded \n");
 
     initMatrices(shaderSimple);
-    printf("[LOG] Initialize Matricess \n");
+    printf("[LOG] Initialize Matrices \n");
 
     // Set up ParticleGenerator
     // TODO: Create a initialization function for this
     mt::ParticleGenerator particleGenerator(PARTICLE_C, PARTICLE_W, PARTICLE_H);
     CVK::FBO fbo( PARTICLE_W * std::sqrt(PARTICLE_C), PARTICLE_H * std::sqrt(PARTICLE_C), 1, true);
+    printf("[LOG] Initialize Particle Generator and FBO \n");
 
     mt::ParticleGrid particleGrid; // TODO: Merge Particle Grid and Particle Generator together
     particleGenerator.initializeParticles(particleGrid.particles, 1.8f);
     renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
+    printf("[LOG] Initialize Particle Grid and generate particles. \n");
+    printf("[LOG] Render ParticleGrid into FBO \n");
 
     // Set up global memory array for transferring weight for particles from GPU to CPU
     float global_weight_memory[PARTICLE_C] = {0}; // with space for all particle weights
     for (int i = 0; i < PARTICLE_C; i++) global_weight_memory[i] = 0.f; // fill array with 0.f
+    printf("[LOG] Initialize and erase global weight memory for comunication between CPU and GPU\n");
 
     // Allocate corresponding memory space on GPU
     float *dev_global_weight_memory;
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_global_weight_memory, PARTICLE_C * sizeof(float)));
+    printf("[LOG] Allocate global weight memory on GPU \n");
 
     // CUDA interopertion part
     // TODO: Create a initialization function for this
@@ -99,6 +104,7 @@ int main(int argc, char **argv)
     cudaArray *particle_grid_tex_array;
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&particle_grid_tex_array, particle_grid_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &particle_grid_resource));
+    printf("[LOG] Register Particle Grid texture for ZED frame \n");
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
     GLuint zed_tex;
@@ -138,7 +144,8 @@ int main(int argc, char **argv)
             global_weight_memory[i] = 0.f; // fill array with 0.f - clean up
         }
 
-        renderZEDTextureToScreen(zed_tex, WINDOW_W, WINDOW_H, textureToScreen);
+        // TODO: For now, this is only the red color map
+        renderZEDTextureToScreen(zed_tex, WINDOW_W, WINDOW_H, textureToScreen); // TODO: Render best fitting particle on top
 
         particleGenerator.updateParticles(particleGrid.particles);
         renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
