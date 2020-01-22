@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
     glewInit();
 
-    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/BGRtoRGBSimpleTexture.frag" };
+    const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };    // Attention: ZED image will stay BGR! Make sure to switch texel values in Kernel
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
 
     // Init ZED Camera or SVO input file
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     glGenTextures(1, &imageTex);
     glBindTexture(GL_TEXTURE_2D, imageTex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Cuda resources for CUDA-OpenGL interoperability
