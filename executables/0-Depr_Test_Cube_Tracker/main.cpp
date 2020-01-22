@@ -7,7 +7,7 @@
 #include <cuda_gl_interop.h>
 #include <sl/Camera.hpp>
 
-#include "kernel.h"
+//#include "kernel.h"
 
 #define ZED_WIDTH 1280
 #define ZED_HEIGHT 720
@@ -174,7 +174,7 @@ int main()
             // Connect with global_weight_memory with device
             HANDLE_CUDA_ERROR(cudaMemcpy(dev_global_weight_memory, global_weight_memory, PARTICLE_COUNT * sizeof(float), cudaMemcpyHostToDevice));
 
-            callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU),
+            mt::testCallKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU),
                     zed_out_img.getPtr<sl::uchar4>(MEM_GPU),
                     zed_in_img.getStep(MEM_GPU),
                     WIDTH, HEIGHT,
