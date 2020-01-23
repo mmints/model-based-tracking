@@ -16,10 +16,12 @@ using namespace std;
 #define WINDOW_W 1280
 #define WINDOW_H 720
 
-#define PARTICLE_W WINDOW_W/2
-#define PARTICLE_H WINDOW_H/2
+#define PARTICLE_SCALE 2
 
-#define PARTICLE_C 100 //Particle Count
+#define PARTICLE_W  WINDOW_W / PARTICLE_SCALE
+#define PARTICLE_H  WINDOW_H / PARTICLE_SCALE
+
+#define PARTICLE_C 16 //Particle Count. Have to be a quad!
 
 GLFWwindow* window;
 
@@ -114,8 +116,10 @@ int main(int argc, char **argv)
     cudaArray *zed_tex_array;
     printf("[LOG] Create and register GL texture for ZED frame \n");
 
-    Mat zed_in_img  =  Mat(WINDOW_W, WINDOW_H, MAT_TYPE_8U_C4, MEM_GPU);
-    Mat zed_out_img =  Mat(WINDOW_W, WINDOW_H, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat zed_in_img      =  Mat(WINDOW_W, WINDOW_H, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat zed_red_map_img =  Mat(WINDOW_W, WINDOW_H, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat zed_out_img     =  Mat(WINDOW_W, WINDOW_H, MAT_TYPE_8U_C4, MEM_GPU);
+    printf("[LOG] Set ZED Mats \n");
 
     // Render Loop
     while(!glfwWindowShouldClose( window))
@@ -123,7 +127,21 @@ int main(int argc, char **argv)
         zed.grab();
         // ZED interoperation routine
         if (zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU) == SUCCESS) {
-            kernel::simpleRedDetector(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), 140, WINDOW_W, WINDOW_H, zed_in_img.getStep(MEM_GPU));
+
+            // Call kernels
+            kernel::simpleRedDetector(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_red_map_img.getPtr<sl::uchar4>(MEM_GPU), 140, WINDOW_W, WINDOW_H, zed_in_img.getStep(MEM_GPU));
+
+            HANDLE_CUDA_ERROR(cudaMemcpy(dev_global_weight_memory, global_weight_memory, PARTICLE_C * sizeof(float), cudaMemcpyHostToDevice));
+
+            mt::compareRedPixel(zed_red_map_img.getPtr<sl::uchar4>(MEM_GPU),
+                                zed_red_map_img.getStep(MEM_GPU),
+                                PARTICLE_SCALE,
+                                (int) std::sqrt(PARTICLE_C),
+                                PARTICLE_W, PARTICLE_H,
+                                particle_grid_tex_array, dev_global_weight_memory,
+                                zed_out_img.getPtr<sl::uchar4>(MEM_GPU)); // For debugging!
+
+            HANDLE_CUDA_ERROR(cudaMemcpy(global_weight_memory, dev_global_weight_memory, PARTICLE_C * sizeof(float), cudaMemcpyDeviceToHost));
 
             HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &zed_resource, 0));
             HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&zed_tex_array, zed_resource, 0, 0));
@@ -139,6 +157,7 @@ int main(int argc, char **argv)
         }
 
         // TODO: Resampling
+        // Transfer weights from global_weight_memory to particles
         for (int i = 0; i < PARTICLE_C; i++) {
             particleGrid.particles[i].setWeight(global_weight_memory[i]);
             global_weight_memory[i] = 0.f; // fill array with 0.f - clean up
@@ -154,9 +173,15 @@ int main(int argc, char **argv)
         glfwPollEvents();
     }
 
+    printf("[LOG] Particle Weights: \n");
+    for (int i = 0; i < PARTICLE_C; i++) printf("%i -> %f \n", i, particleGrid.particles[i].getWeight());
+
+
     printf("[LOG] Done! Cleaning up and shutting down \n");
 
     zed_in_img.free();
+    zed_out_img.free();
+    zed_red_map_img.free();
 
     glfwDestroyWindow( window);
     glfwTerminate();
