@@ -22,9 +22,7 @@ private:
     int m_particle_count;
     int m_particle_width;
     int m_particle_height;
-    int m_grid_resolution_width;
-    int m_grid_resolution_height;
-
+    int m_dimension;
     void generateLinearDistributedRotationMatrix(glm::vec3 &random_angle);
     void generateGaussianDistributedRotationMatrix(glm::mat4 &rotation_matrix);
 

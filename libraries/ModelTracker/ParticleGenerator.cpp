@@ -13,9 +13,7 @@ mt::ParticleGenerator::ParticleGenerator(std::string path_to_model, int particle
     m_particle_width = particle_width;
     m_particle_height = particle_height;
 
-    int dimension = (int)std::sqrt(m_particle_count);
-    m_grid_resolution_width = m_particle_width * dimension;
-    m_grid_resolution_height = m_particle_height * dimension;
+    m_dimension = (int)std::sqrt(m_particle_count);
 }
 
 // More simple constructor that just create a red sphere
@@ -39,9 +37,7 @@ mt::ParticleGenerator::ParticleGenerator(int particle_count, int particle_width,
     m_particle_width = particle_width;
     m_particle_height = particle_height;
 
-    int dimension = (int)std::sqrt(m_particle_count);
-    m_grid_resolution_width = m_particle_width * dimension;
-    m_grid_resolution_height = m_particle_height * dimension;
+    m_dimension = (int)std::sqrt(m_particle_count);
 }
 
 
@@ -66,10 +62,9 @@ void mt::ParticleGenerator::initializeParticles(std::vector<Particle> &particles
 }
 
 void mt::ParticleGenerator::renderParticleTextureGrid(std::vector<Particle> &particles) {
-    int dimension = (int)std::sqrt(m_particle_count);
     int i = 0;
-    for (int x = 0; x < dimension; x++) {
-        for (int y = 0; y < dimension; y++) {
+    for (int x = 0; x < m_dimension; x++) {
+        for (int y = 0; y < m_dimension; y++) {
             glViewport(m_particle_width * x, m_particle_height * y, m_particle_width, m_particle_height);
             m_model->setModelMatrix(particles[i].getModelMatrix());
             m_model->render();

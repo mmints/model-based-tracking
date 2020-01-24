@@ -16,27 +16,20 @@ using namespace std;
 #define WINDOW_W 1280
 #define WINDOW_H 720
 
-#define PARTICLE_SCALE 2
+#define PARTICLE_SCALE 10
 
 #define PARTICLE_W  WINDOW_W / PARTICLE_SCALE
 #define PARTICLE_H  WINDOW_H / PARTICLE_SCALE
 
-#define PARTICLE_C 16 //Particle Count. Have to be a quad!
+#define PARTICLE_C 1024//Particle Count. Have to be a quad!
 
 GLFWwindow* window;
 
+// Transformation Matrices for Particle Rendering
 glm::mat4 viewMatrix;
 glm::mat4 projectionMatrix;
 GLuint viewMatrixHandle;
 GLuint projectionMatrixHandle;
-void initMatrices(ShaderSimple shaderSimple)
-{
-    viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
-    projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
-
-    viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WINDOW_W/WINDOW_H, 1.0f, 100.0f);
-}
 
 void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleGenerator &particleGenerator,mt::ParticleGrid &particleGrid)
 {
@@ -57,6 +50,8 @@ void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleG
 
 int main(int argc, char **argv)
 {
+    printf("[LOG] Particle Height: %i \n", PARTICLE_H);
+
     window = initGLWindow(window, WINDOW_W, WINDOW_H, "Red Ball Tracker", BLACK);
     printf("[LOG] Initialize GL Window \n");
 
@@ -72,13 +67,23 @@ int main(int argc, char **argv)
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
     printf("[LOG] shaderSimple is loaded \n");
 
-    initMatrices(shaderSimple);
+    // init Matrices
+    viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
+    projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
+
+    viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WINDOW_W/WINDOW_H, 1.0f, 100.0f);
     printf("[LOG] Initialize Matrices \n");
 
     // Set up ParticleGenerator
     // TODO: Create a initialization function for this
     mt::ParticleGenerator particleGenerator(PARTICLE_C, PARTICLE_W, PARTICLE_H);
-    CVK::FBO fbo( PARTICLE_W * std::sqrt(PARTICLE_C), PARTICLE_H * std::sqrt(PARTICLE_C), 1, true);
+
+    CVK::FBO fbo( (int) (PARTICLE_W * std::sqrt(PARTICLE_C)), (int)(PARTICLE_H * std::sqrt(PARTICLE_C)), 1, true);
+    printf("***** %i \n", (int)(PARTICLE_W * std::sqrt(PARTICLE_C)) );
+    printf("***** %i \n", (int)(PARTICLE_H * std::sqrt(PARTICLE_C)) );
+
+    //CVK::FBO fbo( WINDOW_W, WINDOW_H, 1, true);
     printf("[LOG] Initialize Particle Generator and FBO \n");
 
     mt::ParticleGrid particleGrid; // TODO: Merge Particle Grid and Particle Generator together
@@ -86,6 +91,7 @@ int main(int argc, char **argv)
     renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
     printf("[LOG] Initialize Particle Grid and generate particles. \n");
     printf("[LOG] Render ParticleGrid into FBO \n");
+
 
     // Set up global memory array for transferring weight for particles from GPU to CPU
     float global_weight_memory[PARTICLE_C] = {0}; // with space for all particle weights
@@ -139,7 +145,8 @@ int main(int argc, char **argv)
                                 (int) std::sqrt(PARTICLE_C),
                                 PARTICLE_W, PARTICLE_H,
                                 particle_grid_tex_array, dev_global_weight_memory,
-                                zed_out_img.getPtr<sl::uchar4>(MEM_GPU)); // For debugging!
+                                zed_out_img.getPtr<sl::uchar4>(MEM_GPU), // For debugging!
+                                zed_in_img.getPtr<sl::uchar4>(MEM_GPU)); // For debugging!
 
             HANDLE_CUDA_ERROR(cudaMemcpy(global_weight_memory, dev_global_weight_memory, PARTICLE_C * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -165,6 +172,7 @@ int main(int argc, char **argv)
 
         // TODO: For now, this is only the red color map
         renderZEDTextureToScreen(zed_tex, WINDOW_W, WINDOW_H, textureToScreen); // TODO: Render best fitting particle on top
+        //renderTextureToScreen(particleGrid.texture, WINDOW_W, WINDOW_H, textureToScreen);
 
         particleGenerator.updateParticles(particleGrid.particles);
         renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
