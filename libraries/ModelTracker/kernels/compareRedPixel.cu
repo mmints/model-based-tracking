@@ -17,7 +17,8 @@ __global__ void compareRedPixelKernel(sl::uchar4 *zed_in, size_t step,
                                 int particle_scale, int particle_grid_dimension,
                                 int particle_width, int particle_height,
                                 float *global_weight_memory,
-                                sl::uchar4 *debug_img_out)
+                                sl::uchar4 *debug_img_out,
+                                sl::uchar4 *debug_clean_in)
 {
     // Get the texel value from particleGrid.texture (parts as particle_grid_texture_ref)
     // use unsigned integer because the numbers can become very large
@@ -38,8 +39,6 @@ __global__ void compareRedPixelKernel(sl::uchar4 *zed_in, size_t step,
     if (zed_in[offset].x != 0)
     {
         uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, particle_grid_texture_y);
-        if (particle_grid_pixel_value.x != 0)
-            printf("%i \n", particle_grid_pixel_value.x);
 
         debug_img_out[offset] = sl::uchar4(0, 0, 0, 0);
 
@@ -50,6 +49,9 @@ __global__ void compareRedPixelKernel(sl::uchar4 *zed_in, size_t step,
             debug_img_out[offset] = sl::uchar4(0, 255, 0, 0);
         }
         else {
+/*            debug_img_out[offset].x = debug_clean_in[offset].z;
+            debug_img_out[offset].y = debug_clean_in[offset].y;
+            debug_img_out[offset].z = debug_clean_in[offset].x;*/
             debug_img_out[offset] = sl::uchar4(0, 0, 0, 0);
         }
     }
@@ -63,7 +65,8 @@ void mt::compareRedPixel(sl::uchar4 *zed_in,  size_t step,
                         int particle_width, int particle_height,
                         cudaArray *particle_grid_tex_array,
                         float *dev_global_weight_memory,
-                         sl::uchar4 *debug_img_out)
+                         sl::uchar4 *debug_img_out,
+                         sl::uchar4 *debug_clean_in)
 {
     HANDLE_CUDA_ERROR(cudaBindTextureToArray(particle_grid_texture_ref, particle_grid_tex_array));
 
@@ -82,7 +85,8 @@ void mt::compareRedPixel(sl::uchar4 *zed_in,  size_t step,
                                                  particle_grid_dimension,
                                                  particle_width, particle_height,
                                                  dev_global_weight_memory,
-                                                 debug_img_out);
+                                                 debug_img_out,
+                                                 debug_clean_in);
 
     HANDLE_CUDA_ERROR(cudaUnbindTexture(particle_grid_texture_ref));
 }

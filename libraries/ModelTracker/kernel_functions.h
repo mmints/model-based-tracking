@@ -23,7 +23,8 @@ namespace mt
                          int particle_width, int particle_height,
                          cudaArray *particle_grid_tex_array,
                          float *dev_global_weight_memory,
-                         sl::uchar4 *debug_img_out); // DEBUG IMG
+                         sl::uchar4 *debug_img_out,
+                         sl::uchar4 *debug_clean_in); // DEBUG IMG
 }
 
 #endif //MT_KERNEL_FUNCTIONS_H

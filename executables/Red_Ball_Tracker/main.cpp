@@ -21,7 +21,7 @@ using namespace std;
 #define PARTICLE_W  WINDOW_W / PARTICLE_SCALE
 #define PARTICLE_H  WINDOW_H / PARTICLE_SCALE
 
-#define PARTICLE_C 1024//Particle Count. Have to be a quad!
+#define PARTICLE_C 16//Particle Count. Have to be a quad!
 
 GLFWwindow* window;
 
