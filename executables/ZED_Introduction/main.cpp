@@ -48,6 +48,10 @@ int main()
     init_parameters.depth_mode = DEPTH_MODE_PERFORMANCE;
     ERROR_CODE err = zed.open(init_parameters);
 
+    // Set Runtime Parameters
+    RuntimeParameters runtime_parameters;
+    runtime_parameters.sensing_mode = SENSING_MODE_FILL;
+
     // ERRCODE display
     if (err != SUCCESS) {
         zed.close();
@@ -73,9 +77,9 @@ int main()
 
     while( !glfwWindowShouldClose(window))
     {
-        int res = zed.grab();
+        int res = zed.grab(runtime_parameters);
 
-        if (zed.retrieveImage(gpuLeftImage, VIEW_LEFT, MEM_GPU) == SUCCESS) {
+        if (zed.retrieveImage(gpuLeftImage, VIEW_DEPTH, MEM_GPU) == SUCCESS) {
             cudaArray_t ArrIm;
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
