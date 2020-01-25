@@ -13,10 +13,10 @@ CVK::ShaderPostProcessing::ShaderPostProcessing( GLuint shader_mask, const char*
 		glm::vec3( 1.f, 1.f, 0.f));
 
 	m_screenFillingQuadZED.set_Points(
-            glm::vec3( 1.f, -1.f, 0.f),
-	        glm::vec3( 1.f, 1.f, 0.f),
+            glm::vec3( -1.f, -1.f, 0.f),
             glm::vec3( -1.f, 1.f, 0.f),
-            glm::vec3( -1.f, -1.f, 0.f));
+            glm::vec3( 1.f, 1.f, 0.f),
+            glm::vec3( 1.f, -1.f, 0.f));
 }
 
 void CVK::ShaderPostProcessing::update()
