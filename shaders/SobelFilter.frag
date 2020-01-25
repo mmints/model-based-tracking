@@ -36,6 +36,8 @@ vec3 sobel(float stepx, float stepy, vec2 center){
     float x = tleft + 2.0*left + bleft - tright - 2.0*right - bright;
     float y = -tleft - 2.0*top - tright + bleft + 2.0 * bottom + bright;
     float color = sqrt((x*x) + (y*y));
+    if (color > 0.1f)
+        color = 1.f;
     return vec3(color,color,color);
 }
 
