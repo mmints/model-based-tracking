@@ -1,12 +1,13 @@
 #version 330
 
+uniform int width;
+uniform int height;
+
 in vec2 passUVCoord;
 
 uniform sampler2D colortexture;
-out vec4 fragmentColor;
 
-float width = 512.f;
-float height = width;
+out vec4 fragmentColor;
 
 // Use these parameters to fiddle with settings
 float step = 1.0;
@@ -43,5 +44,6 @@ vec3 sobel(float stepx, float stepy, vec2 center){
 
 void main(void)
 {
+  //  fragmentColor.xyz = sobel(step/resolution.x, step/resolution.y, passUVCoord);
     fragmentColor.xyz = sobel(step/width, step/height, passUVCoord);
 }
