@@ -12,8 +12,10 @@ out vec4 fragmentColor;
 // Use these parameters to fiddle with settings
 float step = 1.0;
 
-float intensity(in vec4 color){
-    return sqrt((color.x*color.x)+(color.y*color.y)+(color.z*color.z));
+float intensity(vec4 color){
+    // Transform RGB values of texture into gray scale befor calculation the itensity
+    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114)); // Values from Priese Buch S. 53
+    return dot(vec3(gray),vec3(gray));
 }
 
 vec3 sobel(float stepx, float stepy, vec2 center){
@@ -34,9 +36,9 @@ vec3 sobel(float stepx, float stepy, vec2 center){
     //    X = 2 0 -2  Y = 0  0  0
     //        1 0 -1      1  2  1
 
-    float x = tleft + 2.0*left + bleft - tright - 2.0*right - bright;
-    float y = -tleft - 2.0*top - tright + bleft + 2.0 * bottom + bright;
-    float color = sqrt((x*x) + (y*y));
+    float x =  tleft + 2.0 * left + bleft  - tright - 2.0 * right  - bright;
+    float y = -tleft - 2.0 * top  - tright + bleft  + 2.0 * bottom + bright;
+    float color = dot(vec2(x,y), vec2(x,y));
     if (color > 0.1f)
         color = 1.f;
     return vec3(color,color,color);
@@ -44,6 +46,5 @@ vec3 sobel(float stepx, float stepy, vec2 center){
 
 void main(void)
 {
-  //  fragmentColor.xyz = sobel(step/resolution.x, step/resolution.y, passUVCoord);
     fragmentColor.xyz = sobel(step/width, step/height, passUVCoord);
 }
