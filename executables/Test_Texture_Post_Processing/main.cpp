@@ -30,8 +30,8 @@ void resizeCallback( GLFWwindow *window, int w, int h)
 CVK::Node *cube_node = nullptr;
 void initScene()
 {
-    cube_node = new CVK::Node("rubiksCube", RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj");
-    cube_node->setModelMatrix(glm::scale(glm::mat4(1.f), glm::vec3(0.3f)));
+    cube_node = new CVK::Node("rubiksCube", RESOURCES_PATH "/simple_cube/simple_cube.obj");
+    cube_node->setModelMatrix(glm::scale(glm::mat4(1.f), glm::vec3(1.f)));
 }
 
 int main()
