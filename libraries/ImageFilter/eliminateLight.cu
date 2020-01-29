@@ -19,7 +19,11 @@ __global__ void eliminateLightKernel(sl::uchar4 *in, sl::uchar4 *out, size_t ste
     out[offset].y = sl::uchar1 (green_n * 255);
     out[offset].z = sl::uchar1 (red_n * 255);
 
-/*    // convert 0..255 to 0..1.f
+
+/* Just keep this stuff, because it might be useful and I will
+ * be to lazy to reimplemented this stuff
+ *
+ * // convert 0..255 to 0..1.f
     float3 pixel_color_f;
     pixel_color_f.x = pixel_color.x / 255.f; // B
     pixel_color_f.y = pixel_color.y / 255.f; // G
@@ -72,16 +76,14 @@ __global__ void eliminateLightKernel(sl::uchar4 *in, sl::uchar4 *out, size_t ste
 
 }
 
-void kernel::eliminateLight(const sl::Mat &in_zed, sl::Mat &out_zed)
+void filter::eliminateLight(const sl::Mat &in_zed, sl::Mat &out_zed)
 {
-    // For better overview
     size_t width = in_zed.getWidth();
     size_t height = in_zed.getHeight();
     size_t step = in_zed.getStep(sl::MEM_GPU);
 
     sl::uchar4 *in_zed_ptr = in_zed.getPtr<sl::uchar4>(sl::MEM_GPU);
     sl::uchar4 *out_zed_ptr = out_zed.getPtr<sl::uchar4>(sl::MEM_GPU);
-
 
     const size_t BLOCKSIZE_X = 32;
     const size_t BLOCKSIZE_Y = 8;
