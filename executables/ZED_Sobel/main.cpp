@@ -64,8 +64,10 @@ int main(int argc, char **argv)
         int res = zed.grab();
 
         if (zed.retrieveImage(inImage, VIEW_LEFT_GRAY, MEM_GPU) == SUCCESS) {
-            kernel::meanFilter(inImage.getPtr<sl::uchar1>(MEM_GPU), tempImage.getPtr<sl::uchar1>(MEM_GPU), width, height, inImage.getStep(MEM_GPU), 3);
-            kernel::sobelFilter(tempImage.getPtr<sl::uchar1>(MEM_GPU), outImage.getPtr<sl::uchar1>(MEM_GPU), width, height, tempImage.getStep(MEM_GPU));
+
+            filter::meanFilter(inImage, tempImage, 3);
+            filter::sobelFilter(tempImage, outImage);
+
             cudaArray_t ArrIm;
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
