@@ -1,15 +1,17 @@
 #include "Particle.h"
 
-mt::Particle::Particle(int index)
+mt::Particle::Particle(int width, int height)
 {
-    m_index = index;
+    m_width = width;
+    m_height = height;
     m_weight = 0.f;
     m_translation_vector = glm::vec3(1.f);
     glm::vec3 m_rotation_angles = glm::vec3(0.f);
 }
 
-mt::Particle::Particle(int index, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles) {
-    m_index = index;
+mt::Particle::Particle(int width, int height, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles) {
+    m_width = width;
+    m_height = height;
     m_weight = weight;
     m_translation_vector = translation_vector;
     m_rotation_angles = rotation_angles;
@@ -23,8 +25,12 @@ float mt::Particle::getWeight() {
     return m_weight;
 }
 
-int mt::Particle::getIndex() {
-    return m_index;
+int mt::Particle::getWidth() {
+    return m_width;
+}
+
+int mt::Particle::getHeight() {
+    return m_height;
 }
 
 glm::mat4 mt::Particle::getModelMatrix() {
