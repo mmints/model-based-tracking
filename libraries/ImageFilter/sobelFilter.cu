@@ -44,8 +44,8 @@ void filter::sobelFilter(const sl::Mat &in_zed, sl::Mat &out_zed)
     size_t height = in_zed.getHeight();
     size_t step = in_zed.getStep(sl::MEM_GPU);
 
-    sl::uchar4 *in_zed_ptr = in_zed.getPtr<sl::uchar4>(sl::MEM_GPU);
-    sl::uchar4 *out_zed_ptr = out_zed.getPtr<sl::uchar4>(sl::MEM_GPU);
+    sl::uchar1 *in_zed_ptr = in_zed.getPtr<sl::uchar1>(sl::MEM_GPU);
+    sl::uchar1 *out_zed_ptr = out_zed.getPtr<sl::uchar1>(sl::MEM_GPU);
 
     const size_t BLOCKSIZE_X = 32;
     const size_t BLOCKSIZE_Y = 8;
