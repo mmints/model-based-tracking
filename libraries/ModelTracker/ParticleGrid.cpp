@@ -18,7 +18,8 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_color_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_color_shader_paths);
     m_normals_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_normals_shader_paths);
     m_depth_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_depth_shader_paths);
-
+    m_sobel_shader = new ShaderSobel( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_sobel_shader_paths);
+    m_sobel_shader->setResolution(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
     // Set Matrices
     m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -38,6 +39,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_color_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_normals_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_depth_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
+    m_edge_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
 
     // Init Particles
     initializeParticles(particle_count, particle_width, particle_height);
@@ -90,7 +92,7 @@ GLuint ParticleGrid::getNormalTexture()
 void ParticleGrid::renderDepthTexture()
 {
     m_depth_fbo->bind();
-    CVK::State::getInstance()->setShader(m_normals_shader);
+    CVK::State::getInstance()->setShader(m_depth_shader);
     m_depth_shader->useProgram();
 
     glUniformMatrix4fv(m_view_matrix_handler_depth, 1, GL_FALSE, value_ptr(m_view_matrix));
@@ -105,6 +107,24 @@ GLuint ParticleGrid::getDepthTexture()
 {
     return m_depth_fbo->getColorTexture(0);
 }
+
+// *** Edge FBO *** //
+
+void ParticleGrid::renderEdgeTexture()
+{
+    m_edge_fbo->bind();
+    m_sobel_shader->setTextureInput(0, m_color_fbo->getColorTexture(0));
+    m_sobel_shader->useProgram();
+    m_sobel_shader->update();
+    m_sobel_shader->render();
+    m_edge_fbo->unbind();
+}
+
+GLuint ParticleGrid::getEdgeTexture()
+{
+    return m_edge_fbo->getColorTexture(0);
+}
+
 
 // *** Private Functions *** //
 

@@ -12,6 +12,7 @@
 
 #include "Particle.h"
 #include <CVK_2/CVK_Framework.h>
+#include <Shader/ShaderSobel.h>
 
 namespace mt
 {
@@ -28,11 +29,13 @@ private:
     const char *m_color_shader_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     const char *m_normals_shader_paths[2] = {SHADERS_PATH "/PassNormals.vert", SHADERS_PATH "/PassNormals.frag"};
     const char *m_depth_shader_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/PassDepth.frag"};
+    const char *m_sobel_shader_paths[2] = {SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SobelFilter.frag"};
 
     // Shader
     ShaderSimple *m_color_shader = nullptr;
     ShaderSimple *m_normals_shader = nullptr;
     ShaderSimple *m_depth_shader = nullptr;
+    ShaderSobel *m_sobel_shader = nullptr;
 
     // Matrices
     glm::mat4 m_view_matrix;
@@ -52,6 +55,7 @@ private:
     CVK::FBO *m_color_fbo = nullptr;
     CVK::FBO *m_normals_fbo = nullptr;
     CVK::FBO *m_depth_fbo = nullptr;
+    CVK::FBO *m_edge_fbo = nullptr;
 
     // Private Functions
     void initializeParticles(int particle_count, int width, int height);
@@ -96,8 +100,20 @@ public:
      */
     GLuint getDepthTexture();
 
+    /**
+     * Bind the Edge FBO and perform sobel post processing on
+     * the color texture with the sobel shader and render into this buffer.
+     */
+    void renderEdgeTexture();
+
+    /**
+     * Returns the texture ID of the edge texture.
+     * @return edge texture id
+     */
+    GLuint getEdgeTexture();
+
 };
 
 }
 
-#endif //MT_PARTICLEGRID_H
+#endif //MT_PARTICLEGRID_Hk
