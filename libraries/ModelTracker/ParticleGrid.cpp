@@ -32,10 +32,8 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     initializeParticles(particle_count, particle_width, particle_height);
 }
 
-/**
- * Bind the Color FBO and iterate over the ParticleGrid structure with an view port.
- * Render at every position one particle.
- */
+// *** Color FBO *** //
+
 void ParticleGrid::renderColorTexture()
 {
     m_color_fbo->bind();
@@ -49,10 +47,6 @@ void ParticleGrid::renderColorTexture()
     m_color_fbo->unbind();
 }
 
-/**
- * Retruns the texture ID of the color texture.
- * @return color texture id
- */
 GLint ParticleGrid::getColorTexture()
 {
     return m_color_fbo->getColorTexture(0);

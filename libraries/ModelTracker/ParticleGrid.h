@@ -48,8 +48,16 @@ private:
 public:
     ParticleGrid(std::string path_to_model, int particle_width, int particle_height, int particle_count);
 
-    // Color FBO
+    /**
+     * Bind the Color FBO and render the particle grid with the
+     * color shader into this buffer.
+     */
     void renderColorTexture();
+
+    /**
+     * Retruns the texture ID of the color texture.
+     * @return color texture id
+     */
     GLint getColorTexture();
 };
 
