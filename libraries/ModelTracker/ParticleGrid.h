@@ -23,6 +23,7 @@ private:
     // Particles and ParticleGrid Parameters
     std::vector<mt::Particle> m_particles;
     CVK::Node *m_model = nullptr;
+    int m_particle_count;
     int m_particle_grid_dimension; // particle_grid_rows == particle_gird_columns == particle_dimension
 
     // Shader paths
@@ -118,6 +119,13 @@ public:
      * @return edge texture id
      */
     GLuint getEdgeTexture();
+
+    /**
+     * Update all particle in the grid by redistribution the models.
+     * @param rotation_deviation radius of the rotation variance
+     * @param translation_deviation radius of the translation variance
+     */
+    void updateParticleGrid(float rotation_deviation, float translation_deviation);
 
 };
 

@@ -12,6 +12,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     }
     // Set Parameters
     m_model = new CVK::Node("model", path_to_model);
+    m_particle_count = particle_count;
     m_particle_grid_dimension = (int)std::sqrt(particle_count);
 
     // Set Shader
@@ -43,6 +44,23 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
 
     // Init Particles
     initializeParticles(particle_count, particle_width, particle_height, 1.8f);
+
+    // Set Back Ground Color of the Current GL Instance
+    CVK::State::getInstance()->setBackgroundColor(BLACK);
+    glm::vec3 BgCol = CVK::State::getInstance()->getBackgroundColor();
+    glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
+}
+
+void ParticleGrid::updateParticleGrid(float rotation_deviation, float translation_deviation)
+{
+    glm::vec3 rotation_angles;
+    glm::vec3 translation;
+    for (int i = 0; i < m_particle_count; i++)
+    {
+        rotation_angles = glm::gaussRand(m_particles[i].getRotation(), glm::vec3(rotation_deviation));
+        translation = glm::gaussRand(m_particles[i].getTranslation(), glm::vec3(translation_deviation));
+        m_particles[i].setModelMatrix(translation, rotation_angles);
+    }
 }
 
 // *** All FBOs *** //
@@ -123,7 +141,7 @@ GLuint ParticleGrid::getDepthTexture()
 void ParticleGrid::renderEdgeTexture()
 {
     m_edge_fbo->bind();
-    m_sobel_shader->setTextureInput(0, m_color_fbo->getColorTexture(0));
+    m_sobel_shader->setTextureInput(0, getColorTexture());
     m_sobel_shader->useProgram();
     m_sobel_shader->update();
     m_sobel_shader->render();
@@ -155,6 +173,7 @@ void ParticleGrid::initializeParticles(int particle_count, int width, int height
 
 void ParticleGrid::renderParticleGrid()
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     int width = m_particles[0].getWidth();
     int height = m_particles[0].getHeight();
 
