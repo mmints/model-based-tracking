@@ -65,6 +65,12 @@ public:
     ParticleGrid(std::string path_to_model, int particle_width, int particle_height, int particle_count);
 
     /**
+     * Bind all FBOs and render the particle grid with the
+     * color, normal, depth and edge shader into those buffers.
+     */
+    void renderAllTextures();
+
+    /**
      * Bind the Color FBO and render the particle grid with the
      * color shader into this buffer.
      */

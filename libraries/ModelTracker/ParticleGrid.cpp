@@ -45,6 +45,16 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     initializeParticles(particle_count, particle_width, particle_height);
 }
 
+// *** All FBOs *** //
+
+void ParticleGrid::renderAllTextures()
+{
+    renderColorTexture();
+    renderNormalTexture();
+    renderDepthTexture();
+    renderEdgeTexture();
+}
+
 // *** Color FBO *** //
 
 void ParticleGrid::renderColorTexture()
@@ -148,7 +158,7 @@ void ParticleGrid::renderParticleGrid()
         for (int y = 0; y < m_particle_grid_dimension; y++)
         {
             glViewport(width * x, height * y, width, height);
-            m_model->setModelMatrix(m_particles[0].getModelMatrix());
+            m_model->setModelMatrix(m_particles[i].getModelMatrix());
             m_model->render();
             i++;
         }
