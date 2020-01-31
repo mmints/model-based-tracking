@@ -16,7 +16,7 @@ int main()
 {
     glfwInit();
     CVK::useOpenGL33CoreProfile();
-    window = glfwCreateWindow(WIDTH, HEIGHT, "[TEST] Particle Grid", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH * 4, HEIGHT, "[TEST] Particle Grid", nullptr, nullptr);
     glfwSetWindowPos( window, 100, 50);
     glfwMakeContextCurrent(window);
     glewInit();
@@ -30,19 +30,49 @@ int main()
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture );
 
     mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
-    particleGrid.renderColorTexture();
 
-    GLint particle_tex_id = particleGrid.getColorTexture();
+    particleGrid.renderAllTextures();
+
+    GLuint color_tex_id;
+    GLuint normals_tex_id;
+    GLuint depth_tex_id;
+    GLuint edge_tex_id;
 
     while(!glfwWindowShouldClose( window))
     {
-        glViewport(0, 0, WIDTH, HEIGHT);
-        // Second Renderpass to Screen Filling Quad
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        simpleTextureShader.setTextureInput( 0, particle_tex_id);
+
+        glViewport(0, 0, WIDTH, HEIGHT);
+        simpleTextureShader.setTextureInput( 0, color_tex_id);
         simpleTextureShader.useProgram();
         simpleTextureShader.update ();
         simpleTextureShader.render ();
+
+        glViewport(WIDTH, 0, WIDTH, HEIGHT);
+        simpleTextureShader.setTextureInput( 0, normals_tex_id);
+        simpleTextureShader.useProgram();
+        simpleTextureShader.update ();
+        simpleTextureShader.render ();
+
+
+        glViewport(WIDTH * 2, 0, WIDTH, HEIGHT);
+        simpleTextureShader.setTextureInput( 0, depth_tex_id);
+        simpleTextureShader.useProgram();
+        simpleTextureShader.update ();
+        simpleTextureShader.render ();
+
+        glViewport(WIDTH * 3, 0, WIDTH, HEIGHT);
+        simpleTextureShader.setTextureInput( 0, edge_tex_id);
+        simpleTextureShader.useProgram();
+        simpleTextureShader.update ();
+        simpleTextureShader.render ();
+
+        particleGrid.updateParticleGrid(0.2f, 0.8f);
+        particleGrid.renderAllTextures();
+        color_tex_id   = particleGrid.getColorTexture();
+        normals_tex_id = particleGrid.getNormalTexture();
+        depth_tex_id   = particleGrid.getDepthTexture();
+        edge_tex_id    = particleGrid.getEdgeTexture();
 
         glfwSwapBuffers( window);
         glfwPollEvents();
