@@ -25,10 +25,10 @@ private:
     int m_particle_grid_dimension; // particle_grid_rows == particle_gird_columns == particle_dimension
 
     // Shader paths
-    const char *m_shader_simple_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
+    const char *m_color_shader_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
 
     // Shader
-    ShaderSimple *m_shader_simple = nullptr;
+    ShaderSimple *m_color_shader = nullptr;
 
     // Matrices
     glm::mat4 m_view_matrix;

@@ -15,15 +15,15 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_particle_grid_dimension = (int)std::sqrt(particle_count);
 
     // Set Shader
-    m_shader_simple = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_shader_simple_paths);
+    m_color_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_color_shader_paths);
 
     // Set Matrices
     m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     m_projection_matrix = glm::perspective(glm::radians(40.0f), (float) particle_width/particle_height, 1.0f, 100.0f);
 
     // Set Matrix Handler
-    m_view_matrix_handler = glGetUniformLocation(m_shader_simple->getProgramID(), "viewMatrix");
-    m_projection_matrix_handler = glGetUniformLocation(m_shader_simple->getProgramID(), "projectionMatrix");
+    m_view_matrix_handler = glGetUniformLocation(m_color_shader->getProgramID(), "viewMatrix");
+    m_projection_matrix_handler = glGetUniformLocation(m_color_shader->getProgramID(), "projectionMatrix");
 
     // Set FBOs
     m_color_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
@@ -39,8 +39,8 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
 void ParticleGrid::renderColorTexture()
 {
     m_color_fbo->bind();
-    CVK::State::getInstance()->setShader(m_shader_simple);
-    m_shader_simple->useProgram();
+    CVK::State::getInstance()->setShader(m_color_shader);
+    m_color_shader->useProgram();
     glUniformMatrix4fv(m_view_matrix_handler, 1, GL_FALSE, value_ptr(m_view_matrix));
     glUniformMatrix4fv(m_projection_matrix_handler, 1, GL_FALSE, value_ptr(m_projection_matrix));
 
