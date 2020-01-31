@@ -44,18 +44,7 @@ void ParticleGrid::renderColorTexture()
     glUniformMatrix4fv(m_view_matrix_handler, 1, GL_FALSE, value_ptr(m_view_matrix));
     glUniformMatrix4fv(m_projection_matrix_handler, 1, GL_FALSE, value_ptr(m_projection_matrix));
 
-    int width = m_particles[0].getWidth();
-    int height = m_particles[0].getHeight();
-
-    int i = 0;
-    for (int x = 0; x < m_particle_grid_dimension; x++) {
-        for (int y = 0; y < m_particle_grid_dimension; y++) {
-            glViewport(width * x, height * y, width, height);
-            m_model->setModelMatrix(m_particles[0].getModelMatrix());
-            m_model->render();
-            i++;
-        }
-    }
+    renderParticleGrid();
 
     m_color_fbo->unbind();
 }
@@ -77,5 +66,21 @@ void ParticleGrid::initializeParticles(int particle_count, int width, int height
     {
         mt::Particle particle(width, height);
         m_particles.push_back(particle);
+    }
+}
+
+void ParticleGrid::renderParticleGrid()
+{
+    int width = m_particles[0].getWidth();
+    int height = m_particles[0].getHeight();
+
+    int i = 0;
+    for (int x = 0; x < m_particle_grid_dimension; x++) {
+        for (int y = 0; y < m_particle_grid_dimension; y++) {
+            glViewport(width * x, height * y, width, height);
+            m_model->setModelMatrix(m_particles[0].getModelMatrix());
+            m_model->render();
+            i++;
+        }
     }
 }

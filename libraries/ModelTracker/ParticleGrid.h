@@ -43,6 +43,7 @@ private:
 
     // Private Functions
     void initializeParticles(int particle_count, int width, int height);
+    void renderParticleGrid();
 
 public:
     ParticleGrid(std::string path_to_model, int particle_width, int particle_height, int particle_count);
