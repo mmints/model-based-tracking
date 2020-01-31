@@ -17,6 +17,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     // Set Shader
     m_color_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_color_shader_paths);
     m_normals_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_normals_shader_paths);
+    m_depth_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_depth_shader_paths);
 
 
     // Set Matrices
@@ -30,9 +31,13 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_view_matrix_handler_normals = glGetUniformLocation(m_normals_shader->getProgramID(), "viewMatrix");
     m_projection_matrix_handler_normals = glGetUniformLocation(m_normals_shader->getProgramID(), "projectionMatrix");
 
+    m_view_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "viewMatrix");
+    m_projection_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "projectionMatrix");
+
     // Set FBOs
     m_color_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_normals_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
+    m_depth_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
 
     // Init Particles
     initializeParticles(particle_count, particle_width, particle_height);
@@ -54,7 +59,7 @@ void ParticleGrid::renderColorTexture()
     m_color_fbo->unbind();
 }
 
-GLint ParticleGrid::getColorTexture()
+GLuint ParticleGrid::getColorTexture()
 {
     return m_color_fbo->getColorTexture(0);
 }
@@ -75,9 +80,30 @@ void ParticleGrid::renderNormalTexture()
     m_normals_fbo->unbind();
 }
 
-GLint ParticleGrid::getNormalTexture()
+GLuint ParticleGrid::getNormalTexture()
 {
     return m_normals_fbo->getColorTexture(0);
+}
+
+// *** Depth FBO *** //
+
+void ParticleGrid::renderDepthTexture()
+{
+    m_depth_fbo->bind();
+    CVK::State::getInstance()->setShader(m_normals_shader);
+    m_depth_shader->useProgram();
+
+    glUniformMatrix4fv(m_view_matrix_handler_depth, 1, GL_FALSE, value_ptr(m_view_matrix));
+    glUniformMatrix4fv(m_projection_matrix_handler_depth, 1, GL_FALSE, value_ptr(m_projection_matrix));
+
+    renderParticleGrid();
+
+    m_depth_fbo->unbind();
+}
+
+GLuint ParticleGrid::getDepthTexture()
+{
+    return m_depth_fbo->getColorTexture(0);
 }
 
 // *** Private Functions *** //

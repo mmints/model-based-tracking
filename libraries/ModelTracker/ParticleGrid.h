@@ -27,10 +27,12 @@ private:
     // Shader paths
     const char *m_color_shader_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     const char *m_normals_shader_paths[2] = {SHADERS_PATH "/PassNormals.vert", SHADERS_PATH "/PassNormals.frag"};
+    const char *m_depth_shader_paths[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/PassDepth.frag"};
 
     // Shader
     ShaderSimple *m_color_shader = nullptr;
     ShaderSimple *m_normals_shader = nullptr;
+    ShaderSimple *m_depth_shader = nullptr;
 
     // Matrices
     glm::mat4 m_view_matrix;
@@ -39,12 +41,17 @@ private:
     // Matrix Handler
     GLuint m_view_matrix_handler_color;
     GLuint m_projection_matrix_handler_color;
+
     GLuint m_view_matrix_handler_normals;
     GLuint m_projection_matrix_handler_normals;
+
+    GLuint m_view_matrix_handler_depth;
+    GLuint m_projection_matrix_handler_depth;
 
     // FBOs
     CVK::FBO *m_color_fbo = nullptr;
     CVK::FBO *m_normals_fbo = nullptr;
+    CVK::FBO *m_depth_fbo = nullptr;
 
     // Private Functions
     void initializeParticles(int particle_count, int width, int height);
@@ -60,10 +67,10 @@ public:
     void renderColorTexture();
 
     /**
-     * Retruns the texture ID of the color texture.
+     * Returns the texture ID of the color texture.
      * @return color texture id
      */
-    GLint getColorTexture();
+    GLuint getColorTexture();
 
     /**
      * Bind the Normal FBO and render the particle grid with the
@@ -72,10 +79,23 @@ public:
     void renderNormalTexture();
 
     /**
-     * Retruns the texture ID of the color texture.
-     * @return color texture id
+     * Returns the texture ID of the normal texture.
+     * @return normal texture id
      */
-    GLint getNormalTexture();
+    GLuint getNormalTexture();
+
+    /**
+     * Bind the Depth FBO and render the particle grid with the
+     * depth shader into this buffer.
+     */
+    void renderDepthTexture();
+
+    /**
+     * Returns the texture ID of the depth texture.
+     * @return depth texture id
+     */
+    GLuint getDepthTexture();
+
 };
 
 }
