@@ -1,5 +1,6 @@
 #include <CVK_2/CVK_Framework.h>
 #include <Shader/ShaderSimple.h>
+#include <Shader/ShaderSobel.h>
 
 #define WIDTH 512
 #define HEIGHT 512
@@ -38,7 +39,7 @@ int main()
 {
     glfwInit();
     CVK::useOpenGL33CoreProfile();
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Sobel on Cube", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Post Processing on Texture", nullptr, nullptr);
     glfwSetWindowPos( window, 100, 50);
     glfwMakeContextCurrent(window);
     glfwSetWindowSizeCallback( window, resizeCallback);
@@ -50,21 +51,13 @@ int main()
     glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
 
     CVK::FBO fbo( WIDTH, HEIGHT, 1, true );
-    CVK::FBO fbo2( WIDTH, HEIGHT, 1, true );
 
-
-    // Simple rasterization of the 3D Model
     const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
 
-    // Post-processing: Sobel
-    const char *shadernamesSobelShader[2] = {SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SobelFilter.frag"};
-    CVK::ShaderSimpleTexture sobelShader( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernamesSobelShader);
-
-    // Render texture to screen
-    const char *shadernamesDisplayTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
-    CVK::ShaderSimpleTexture displayTexture( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesDisplayTexture );
-
+    const char *sobelNames [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SobelFilter.frag" };
+    ShaderSobel shaderSobel( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, sobelNames);
+    shaderSobel.setResolution(WIDTH, HEIGHT);
     initCamera();
     initScene();
 
@@ -76,32 +69,23 @@ int main()
         double deltaTime = glfwGetTime() - time;
         time = glfwGetTime();
 
-        // Render Model into a FBO
+        // First Renderpass to FBO
         fbo.bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         cam_trackball->update(deltaTime);
         CVK::State::getInstance()->setShader( &shaderSimple);
         shaderSimple.update();
         cube_node->render();
-        glFinish();
-        fbo.unbind();
+        glFinish ( );
+        fbo.unbind ( );
 
-        // Execute post processing sobel filer shader and render back into FBO
+        // Second Renderpass to Screen Filling Quad
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        sobelShader.setTextureInput(0,fbo.getColorTexture(0));
-       // fbo2.bind();
-        sobelShader.useProgram();
-        sobelShader.update();
-        sobelShader.render();
-      //  fbo2.unbind();
+        shaderSobel.setTextureInput ( 0, fbo.getColorTexture ( 0 ) );
+        shaderSobel.useProgram ( );
+        shaderSobel.update ( );
+        shaderSobel.render ( );
 
-
-/*        // Render Texture into a screen filling quad for visualization
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        displayTexture.setTextureInput(0, fbo2.getColorTexture(0));
-        displayTexture.useProgram();
-        displayTexture.update();
-        displayTexture.render();*/
 
         glfwSwapBuffers( window);
         glfwPollEvents();
