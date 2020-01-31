@@ -42,7 +42,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_edge_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
 
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height);
+    initializeParticles(particle_count, particle_width, particle_height, 1.8f);
 }
 
 // *** All FBOs *** //
@@ -138,11 +138,17 @@ GLuint ParticleGrid::getEdgeTexture()
 
 // *** Private Functions *** //
 
-void ParticleGrid::initializeParticles(int particle_count, int width, int height)
+void ParticleGrid::initializeParticles(int particle_count, int width, int height, float distribution_radius)
 {
+    glm::vec3 scene_center = glm::vec3(0.f);
+    glm::vec3 rotation_angles;
+    glm::vec3 translation_vector;
+
     for (int i = 0; i < particle_count; i++)
     {
-        mt::Particle particle(width, height);
+        generateLinearDistributedRotationMatrix(rotation_angles);
+        translation_vector = glm::gaussRand(scene_center, glm::vec3(distribution_radius));
+        mt::Particle particle(width, height, 0.f, translation_vector, rotation_angles);
         m_particles.push_back(particle);
     }
 }
@@ -163,4 +169,11 @@ void ParticleGrid::renderParticleGrid()
             i++;
         }
     }
+}
+
+void ParticleGrid::generateLinearDistributedRotationMatrix(glm::vec3 &random_angle)
+{
+    glm::vec3 min_angle = glm::vec3(0.f);
+    glm::vec3 max_angle = glm::vec3(2 * M_PI);
+    random_angle = glm::linearRand(min_angle, max_angle);
 }
