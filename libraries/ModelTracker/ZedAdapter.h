@@ -1,9 +1,16 @@
-#include <sl/Camera.hpp>
-
 #ifndef MODEL_BASED_TRACKER_ZED_HELPER_H
 #define MODEL_BASED_TRACKER_ZED_HELPER_H
 
+#include <iostream>
+#include <CVK_2/CVK_Framework.h>
 
+#include <sl/Camera.hpp>
+#include <cuda_gl_interop.h>
+
+#include "helper_functions.h"
+#include "ErrorHandling/HANDLE_CUDA_ERROR.h"
+
+using namespace sl;
 
 namespace mt // model based tracking
 {
@@ -11,6 +18,37 @@ namespace mt // model based tracking
 class ZedAdapter
 {
 
+private:
+
+    // Parameters
+    int m_width;
+    int m_height;
+
+    // ZED Camera and Matrices for image data storage (GPU memory)
+    Camera *m_zed = nullptr;
+
+    Mat m_img_raw;  // BGR
+
+    // Cuda resources for CUDA-OpenGL interoperability
+    cudaGraphicsResource* m_texture_resource;
+
+    // GL Texture and Shader for Rendering
+    const char *m_texture_shader_paths[2] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag"};
+    CVK::ShaderSimpleTexture *m_texture_shader;
+    GLuint m_display_texture;
+
+public:
+    ZedAdapter(int width, int height);
+
+    void initCamera();
+    void grab();
+    void retrieveRawImage();
+
+    void imageToGlTexture();
+
+    void renderImage();
+
+    void clean();
 };
 
     // *** Deprecated *** //
