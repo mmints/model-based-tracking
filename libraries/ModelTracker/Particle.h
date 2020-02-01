@@ -11,18 +11,22 @@ class Particle
 {
 private:
     float m_weight;
-    int m_index;
+
+    int m_width;
+    int m_height;
+
     glm::vec3 m_translation_vector;
     glm::vec3 m_rotation_angles;
 
 public:
-    Particle(int index);
-    Particle(int index, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles);
+    Particle(int width, int height);
+    Particle(int width, int height, float weight, glm::vec3 translation_vector, glm::vec3 rotation_angles);
 
     void setWeight(float weight);
     float getWeight();
 
-    int getIndex();
+    int getWidth();
+    int getHeight();
 
     glm::vec3 getTranslation();
     glm::vec3 getRotation();
