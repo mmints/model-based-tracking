@@ -125,7 +125,7 @@ public:
      * @param rotation_deviation radius of the rotation variance
      * @param translation_deviation radius of the translation variance
      */
-    void updateParticleGrid(float rotation_deviation, float translation_deviation);
+    void update(float rotation_deviation, float translation_deviation);
 
 };
 

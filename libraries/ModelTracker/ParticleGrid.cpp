@@ -51,7 +51,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
 }
 
-void ParticleGrid::updateParticleGrid(float rotation_deviation, float translation_deviation)
+void ParticleGrid::update(float rotation_deviation, float translation_deviation)
 {
     glm::vec3 rotation_angles;
     glm::vec3 translation;

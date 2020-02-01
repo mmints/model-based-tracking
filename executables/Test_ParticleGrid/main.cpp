@@ -67,7 +67,7 @@ int main()
         simpleTextureShader.update ();
         simpleTextureShader.render ();
 
-        particleGrid.updateParticleGrid(0.2f, 0.8f);
+        particleGrid.update(0.2f, 0.8f);
         particleGrid.renderAllTextures();
         color_tex_id   = particleGrid.getColorTexture();
         normals_tex_id = particleGrid.getNormalTexture();
