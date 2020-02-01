@@ -12,7 +12,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 1
+
+#define PARTICLE_WIDTH WIDTH
+#define PARTICLE_HEIGHT HEIGHT
 
 using namespace sl;
 
@@ -31,56 +34,6 @@ void initGL()
     CVK::State::getInstance()->setBackgroundColor(BLACK);
     glm::vec3 BgCol = CVK::State::getInstance()->getBackgroundColor();
     glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
-}
-
-// Set up all necessary shader and use the Particle Generator to create a geometry, that will be
-// rendered into tha Color Buffer of ang given FBO
-void renderParticlesIntoFBO(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleGenerator &particleGenerator, std::vector<mt::Particle> &particles)
-{
-    CVK::State::getInstance()->setShader( &shaderSimple);
-
-    // set up the location of matrices in shader program
-    GLuint viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
-    GLuint projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
-
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WIDTH/HEIGHT, 1.0f, 100.0f);
-
-    fbo.bind();
-    shaderSimple.useProgram();
-    // pipe uniform variables to shader
-    glUniformMatrix4fv(viewMatrixHandle, 1, GL_FALSE, value_ptr(viewMatrix));
-    glUniformMatrix4fv(projectionMatrixHandle, 1, GL_FALSE, value_ptr(projectionMatrix));
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    particleGenerator.renderParticleTextureGrid(particles);
-    glFinish(); // Wait until everything is done.
-    fbo.unbind();
-}
-
-void renderParticleGrid(CVK::FBO &fbo, ShaderSimple &shaderSimple, mt::ParticleGenerator &particleGenerator,mt::ParticleGrid &particleGrid)
-{
-    CVK::State::getInstance()->setShader( &shaderSimple);
-
-    // set up the location of matrices in shader program
-    GLuint viewMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "viewMatrix");
-    GLuint projectionMatrixHandle = glGetUniformLocation(shaderSimple.getProgramID(), "projectionMatrix");
-
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(40.0f), (float) WIDTH/HEIGHT, 1.0f, 100.0f);
-
-    fbo.bind();
-    shaderSimple.useProgram();
-    // pipe uniform variables to shader
-    glUniformMatrix4fv(viewMatrixHandle, 1, GL_FALSE, value_ptr(viewMatrix));
-    glUniformMatrix4fv(projectionMatrixHandle, 1, GL_FALSE, value_ptr(projectionMatrix));
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    particleGenerator.renderParticleTextureGrid(particleGrid.particles);
-    glFinish(); // Wait until everything is done.
-    fbo.unbind();
-
-    particleGrid.texture = fbo.getColorTexture(0);
 }
 
 // Renders texture onto a screen filling quad.
@@ -107,21 +60,14 @@ int main()
     const char *shadernames[2] = {SHADERS_PATH "/Simple.vert", SHADERS_PATH "/Simple.frag"};
     ShaderSimple shaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, shadernames);
 
-    mt::ParticleGrid particleGrid;
-
-    mt::ParticleGenerator particleGenerator(RESOURCES_PATH "/rubiks_cube/rubiks_cube.obj", PARTICLE_COUNT, WIDTH, HEIGHT);
-    //std::vector<mt::Particle> particles;
-    //particleGenerator.initializeParticles(particles, 1.8f);
-    particleGenerator.initializeParticles(particleGrid.particles, 1.8f);
-
-    CVK::FBO fbo( WIDTH, HEIGHT, 1, true);
-    //renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
-    renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
+    // Creating Color Particle Grid
+    mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
+    particleGrid.renderColorTexture();
 
     // CUDA interopertion part
     struct cudaGraphicsResource *tex_resource;
     //HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, fbo.getColorTexture(0), GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
-    HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, particleGrid.texture, GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
+    HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&tex_resource, particleGrid.getColorTexture(), GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
     HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &tex_resource));
 
     cudaArray *tex_array;
@@ -147,10 +93,8 @@ int main()
 
     while(!glfwWindowShouldClose( window))
     {
-        //particleGenerator.updateParticles(particles);
-        particleGenerator.updateParticles(particleGrid.particles);
-        //renderParticlesIntoFBO(fbo, shaderSimple, particleGenerator, particles);
-        renderParticleGrid(fbo, shaderSimple, particleGenerator, particleGrid);
+        particleGrid.update(0.2f, 0.8f);
+        particleGrid.renderColorTexture();
 
         zed.grab();
         if (zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU) == SUCCESS) {
