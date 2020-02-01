@@ -1,6 +1,10 @@
 #include <iostream>
 #include "ZedAdapter.h"
 
+
+
+
+// *** Deprecated *** //
 void mt::initBasicZedCameraHD720(sl::Camera &zed)
 {
     // Init ZED Camera
