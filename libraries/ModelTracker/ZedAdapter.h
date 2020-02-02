@@ -19,15 +19,9 @@ class ZedAdapter
 {
 
 private:
-
     // Parameters
     int m_width;
     int m_height;
-
-    // ZED Camera and Matrices for image data storage (GPU memory)
-    Camera *m_zed = nullptr;
-
-    Mat m_img_raw;  // BGR
 
     // Cuda resources for CUDA-OpenGL interoperability
     cudaGraphicsResource* m_texture_resource;
@@ -39,16 +33,9 @@ private:
 
 public:
     ZedAdapter(int width, int height);
-
-    void initCamera();
-    void grab();
-    void retrieveRawImage();
-
-    void imageToGlTexture();
-
+    void imageToGlTexture(Mat &zed_img);
     void renderImage();
 
-    void clean();
 };
 
     // *** Deprecated *** //
