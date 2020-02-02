@@ -23,18 +23,29 @@ private:
     int m_width;
     int m_height;
 
+    // Zed Image Mats
+    Mat m_img_raw_bgr;
+    Mat m_img_raw_bgr;
+    Mat m_img_raw_bgr;
+    Mat m_img_raw_bgr;
+
     // Cuda resources for CUDA-OpenGL interoperability
     cudaGraphicsResource* m_texture_resource;
 
     // GL Texture and Shader for Rendering
     const char *m_texture_shader_paths[2] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag"};
     CVK::ShaderSimpleTexture *m_texture_shader;
+    cudaArray_t m_texture_array;
     GLuint m_display_texture;
+
 
 public:
     ZedAdapter(int width, int height);
+    void retrieveImage(Camera &zed);
     void imageToGlTexture(Mat &zed_img);
+    void imageToGlTexture();
     void renderImage();
+    void freeImages();
 
 };
 
