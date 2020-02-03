@@ -10,16 +10,6 @@ mt::ZedAdapter::ZedAdapter(int width, int height)
     HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&m_texture_resource, m_display_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
 }
 
-
-void mt::ZedAdapter::imageToGlTexture()
-{
-    HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &m_texture_resource, 0));
-    HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&m_texture_array, m_texture_resource, 0, 0));
-    HANDLE_CUDA_ERROR(cudaMemcpy2DToArray(m_texture_array, 0, 0, m_img_raw_bgr.getPtr<sl::uchar1>(MEM_GPU), m_img_raw_bgr.getStepBytes(MEM_GPU), m_img_raw_bgr.getWidth() * sizeof(sl::uchar4), m_img_raw_bgr.getHeight(), cudaMemcpyDeviceToDevice));
-    HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &m_texture_resource, 0));
-}
-
-
 void mt::ZedAdapter::imageToGlTexture(Mat &zed_img)
 {
     HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &m_texture_resource, 0));
@@ -38,19 +28,14 @@ void mt::ZedAdapter::renderImage()
     m_texture_shader->renderZED();
 }
 
-void mt::ZedAdapter::retrieveImage(Camera &zed)
+void mt::ZedAdapter::displayImage(Mat &zed_img)
 {
-    zed.retrieveImage(m_img_raw_bgr, VIEW_LEFT, MEM_GPU);
+    imageToGlTexture(zed_img);
+    renderImage();
 }
 
-void mt::ZedAdapter::freeImages()
-{
-    m_img_raw_bgr.free();
-}
 
-// *** Deprecated *** //
-
-void mt::initBasicZedCameraHD720(sl::Camera &zed)
+void mt::ZedAdapter::initBasicZedCameraHD720(sl::Camera &zed)
 {
     // Init ZED Camera
     sl::InitParameters init_parameters;
@@ -59,7 +44,7 @@ void mt::initBasicZedCameraHD720(sl::Camera &zed)
     zed.open(init_parameters);
 }
 
-void mt::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
+void mt::ZedAdapter::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
 {
     // Init ZED Camera from SVO files
     sl::InitParameters initParameters;
@@ -73,15 +58,16 @@ void mt::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
     }
 }
 
-void mt::initZedCamera(sl::Camera &zed, const char *path_to_file) {
+void mt::ZedAdapter::initZedCamera(sl::Camera &zed, const char *path_to_file)
+{
 
     if (path_to_file) {
         printf("##### Load from file \n");
-        mt::initSVOZedCamera(zed, path_to_file);
+        initSVOZedCamera(zed, path_to_file);
     }
     else {
         printf("###### Load Camera \n");
-        mt::initBasicZedCameraHD720(zed);
+        initBasicZedCameraHD720(zed);
     }
 
 }

@@ -23,12 +23,6 @@ private:
     int m_width;
     int m_height;
 
-    // Zed Image Mats
-    Mat m_img_raw_bgr;
-    Mat m_img_raw_bgr;
-    Mat m_img_raw_bgr;
-    Mat m_img_raw_bgr;
-
     // Cuda resources for CUDA-OpenGL interoperability
     cudaGraphicsResource* m_texture_resource;
 
@@ -38,22 +32,18 @@ private:
     cudaArray_t m_texture_array;
     GLuint m_display_texture;
 
-
 public:
     ZedAdapter(int width, int height);
-    void retrieveImage(Camera &zed);
-    void imageToGlTexture(Mat &zed_img);
-    void imageToGlTexture();
-    void renderImage();
-    void freeImages();
 
-};
-
-    // *** Deprecated *** //
     void initZedCamera(sl::Camera &zed, const char* path_to_file);
     void initBasicZedCameraHD720(sl::Camera &zed);
     void initSVOZedCamera(sl::Camera &zed, const char* path_to_file);
 
+    void imageToGlTexture(Mat &zed_img);
+    void renderImage();
+
+    void displayImage(Mat &zed_img);
+};
 }
 
 #endif //MODEL_BASED_TRACKER_ZED_HELPER_H
