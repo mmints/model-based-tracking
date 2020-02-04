@@ -11,7 +11,7 @@
 
 namespace mt
 {
-    void calculateLikelihood();
+    void calculateWeight(const sl::Mat &in_zed);
 }
 
 #endif //MT_KERNEL_FUNCTIONS_H
