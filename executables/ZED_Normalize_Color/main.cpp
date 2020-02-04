@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
         if (zed.retrieveImage(gpuLeftImage, VIEW_LEFT, MEM_GPU) == SUCCESS) {
             cudaArray_t ArrIm;
-            filter::eliminateLight(gpuLeftImage, outImage);
+            filter::normalizeColor(gpuLeftImage, outImage);
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
             cudaMemcpy2DToArray(ArrIm, 0, 0, outImage.getPtr<sl::uchar1>(MEM_GPU), outImage.getStepBytes(MEM_GPU), outImage.getWidth() * sizeof(sl::uchar4), outImage.getHeight(), cudaMemcpyDeviceToDevice);
