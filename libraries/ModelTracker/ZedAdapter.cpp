@@ -1,59 +1,29 @@
 #include "ZedAdapter.h"
 
-mt::ZedAdapter::ZedAdapter(int width, int height)
+mt::ZedAdapter::ZedAdapter(Camera &zed, RESOLUTION resolution)
 {
-    m_width = width;
-    m_height = height;
+    setResolution(resolution);
+    printf("Initialize ZED with resolution: %i x %i \n", m_width, m_height);
 
-    m_zed = new Camera();
-
-    m_img_raw = Mat(width, height, MAT_TYPE_8U_C4, MEM_GPU);
-
-    m_texture_shader = new CVK::ShaderSimpleTexture( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_texture_shader_paths);
-    generateGlTexture(m_display_texture, width, height);
-    HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&m_texture_resource, m_display_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
+    initHardwareCamera(zed, resolution);
+    initTextureInteroperation();
 }
 
-void mt::ZedAdapter::initCamera()
+mt::ZedAdapter::ZedAdapter(Camera &zed, RESOLUTION resolution, const char* path_to_svo_file)
 {
-    InitParameters init_parameters;
-    init_parameters.camera_resolution = RESOLUTION_HD720;
-    init_parameters.camera_fps = 30.f;
-    ERROR_CODE err = m_zed->open(init_parameters);
+    setResolution(resolution);
+    printf("Initialize ZED with resolution: %i x %i \n", m_width, m_height);
 
-    // ERRCODE display
-    if (err != sl::SUCCESS) {
-        printf("************ FUCK@init \n");
-        m_zed->close();
-    }
+    initSVOZedCamera(zed, path_to_svo_file);
+    initTextureInteroperation();
 }
 
-void mt::ZedAdapter::grab()
-{
-    ERROR_CODE err = m_zed->grab();
-    // ERRCODE display
-    if (err != sl::SUCCESS) {
-        printf("************ FUCK@grab \n");
-        m_zed->close();
-    }
-}
 
-void mt::ZedAdapter::retrieveRawImage()
+void mt::ZedAdapter::imageToGlTexture(Mat &zed_img)
 {
-    ERROR_CODE err = m_zed->retrieveImage(m_img_raw, VIEW_LEFT, MEM_GPU);
-    // ERRCODE display
-    if (err != sl::SUCCESS) {
-        printf("************ FUCK@gretrieveImage \n");
-        m_zed->close();
-    }
-}
-
-void mt::ZedAdapter::imageToGlTexture()
-{
-    cudaArray_t texture_array;
     HANDLE_CUDA_ERROR(cudaGraphicsMapResources(1, &m_texture_resource, 0));
-    HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&texture_array, m_texture_resource, 0, 0));
-    HANDLE_CUDA_ERROR(cudaMemcpy2DToArray(texture_array, 0, 0, m_img_raw.getPtr<sl::uchar1>(MEM_GPU), m_img_raw.getStepBytes(MEM_GPU), m_img_raw.getWidth() * sizeof(sl::uchar4), m_img_raw.getHeight(), cudaMemcpyDeviceToDevice));
+    HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&m_texture_array, m_texture_resource, 0, 0));
+    HANDLE_CUDA_ERROR(cudaMemcpy2DToArray(m_texture_array, 0, 0, zed_img.getPtr<sl::uchar1>(MEM_GPU), zed_img.getStepBytes(MEM_GPU), zed_img.getWidth() * sizeof(sl::uchar4), zed_img.getHeight(), cudaMemcpyDeviceToDevice));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &m_texture_resource, 0));
 }
 
@@ -67,46 +37,41 @@ void mt::ZedAdapter::renderImage()
     m_texture_shader->renderZED();
 }
 
-void mt::ZedAdapter::clean()
+// *** Private Functions *** //
+
+void mt::ZedAdapter::initTextureInteroperation()
 {
-    m_zed->close();
-    m_img_raw.free();
+    m_texture_shader = new CVK::ShaderSimpleTexture( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_texture_shader_paths);
+    generateGlTexture(m_display_texture, m_width, m_height);
+    HANDLE_CUDA_ERROR(cudaGraphicsGLRegisterImage(&m_texture_resource, m_display_texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard));
 }
 
-// *** Deprecated *** //
+void mt::ZedAdapter::setResolution(RESOLUTION res)
+{
+    switch(res)
+    {
+        case RESOLUTION_HD720:  m_width = 1280; m_height = 720; break;
+        case RESOLUTION_HD1080: m_width = 1920; m_height = 1080; break;
+        case RESOLUTION_HD2K:   m_width = 2208; m_height = 1242; break;
+        case RESOLUTION_VGA:    m_width = 672; m_height = 376; break;
+    }
+}
 
-void mt::initBasicZedCameraHD720(sl::Camera &zed)
+void mt::ZedAdapter::initHardwareCamera(sl::Camera &zed, RESOLUTION res)
 {
     // Init ZED Camera
     sl::InitParameters init_parameters;
-    init_parameters.camera_resolution = sl::RESOLUTION_HD720;
-    init_parameters.camera_fps = 30.f;
-    zed.open(init_parameters);
+    init_parameters.camera_resolution = res;
+    init_parameters.camera_fps = 60.f;
+    init_parameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
+    HANDLE_ZED_ERROR(zed.open(init_parameters));
 }
 
-void mt::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
+void mt::ZedAdapter::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
 {
     // Init ZED Camera from SVO files
-    sl::InitParameters initParameters;
-    initParameters.svo_input_filename.set(path_to_file);
-    initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    sl::ERROR_CODE err = zed.open(initParameters);
-
-    // ERRCODE display
-    if (err != sl::SUCCESS) {
-        zed.close();
-    }
-}
-
-void mt::initZedCamera(sl::Camera &zed, const char *path_to_file) {
-
-    if (path_to_file) {
-        printf("##### Load from file \n");
-        mt::initSVOZedCamera(zed, path_to_file);
-    }
-    else {
-        printf("###### Load Camera \n");
-        mt::initBasicZedCameraHD720(zed);
-    }
-
+    sl::InitParameters init_parameters;
+    init_parameters.svo_input_filename.set(path_to_file);
+    init_parameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
+    HANDLE_ZED_ERROR(zed.open(init_parameters));
 }

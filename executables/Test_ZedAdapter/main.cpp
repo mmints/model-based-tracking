@@ -10,14 +10,16 @@ int main(int argc, char **argv)
 {
     window = initGLWindow(window, WIDTH, HEIGHT, "Test ZED Adapter", BLACK);
 
-    ZedAdapter zedAdapter(WIDTH, HEIGHT);
-    zedAdapter.initCamera();
+    Camera zed;
+    Mat zed_img;
+
+    ZedAdapter zedAdapter(zed, RESOLUTION_HD720);
 
     while( !glfwWindowShouldClose(window))
     {
-        zedAdapter.grab();
-        zedAdapter.retrieveRawImage();
-        zedAdapter.imageToGlTexture();
+        zed.grab();
+        zed.retrieveImage(zed_img, VIEW_LEFT, MEM_GPU);
+        zedAdapter.imageToGlTexture(zed_img);
         zedAdapter.renderImage();
 
         glfwSwapBuffers(window);
@@ -25,7 +27,8 @@ int main(int argc, char **argv)
     }
 
     // Clean up
-    zedAdapter.clean();
+    zed_img.free();
+    zed.close();
 
     glfwDestroyWindow(window);
     glfwTerminate();

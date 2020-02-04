@@ -52,7 +52,7 @@ int main()
     initGL();
 
     Camera zed;
-    mt::initSVOZedCamera(zed, "~/Documents/ZED/HD720_SN11351_13-04-52.svo");
+    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, "~/Documents/ZED/HD720_SN11351_13-04-52.svo");
 
     const char *shadernamesSimpleTexture [ 2 ] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag" };
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);

@@ -46,7 +46,10 @@ int main(int argc, char **argv)
     CVK::ShaderSimpleTexture simpleTextureShader( VERTEX_SHADER_BIT | FRAGMENT_SHADER_BIT, shadernamesSimpleTexture);
 
     // Init ZED Camera or SVO input file
-    mt::initZedCamera(zed, argv[1]);
+    if (argv[1])
+        mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, argv[1]);
+    else
+        mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720);
 
     // Create an OpenGL texture and register the CUDA resource on this texture for left image (8UC4 -- RGBA)
     glEnable(GL_TEXTURE_2D);

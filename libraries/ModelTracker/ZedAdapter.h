@@ -9,53 +9,81 @@
 
 #include "helper_functions.h"
 #include "ErrorHandling/HANDLE_CUDA_ERROR.h"
+#include "ErrorHandling/HANDLE_ZED_ERROR.h"
 
 using namespace sl;
 
 namespace mt // model based tracking
 {
 
-class ZedAdapter
-{
+    class ZedAdapter
+    {
 
-private:
+    private:
+        // Parameters
+        int m_width;
+        int m_height;
 
-    // Parameters
-    int m_width;
-    int m_height;
+        // GL Texture and Shader for Rendering and Cuda resource for CUDA-OpenGL interoperability
+        const char *m_texture_shader_paths[2] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag"};
+        CVK::ShaderSimpleTexture *m_texture_shader;
+        cudaGraphicsResource* m_texture_resource;
+        cudaArray_t m_texture_array;
+        GLuint m_display_texture;
 
-    // ZED Camera and Matrices for image data storage (GPU memory)
-    Camera *m_zed = nullptr;
+        // Private Functions
+        /**
+         * Set the resolution of the ZED Camera and of the GL texture
+         * @param res Resolution type from sl::RESOLUTION
+         */
+        void setResolution(RESOLUTION res);
 
-    Mat m_img_raw;  // BGR
+        /**
+         * Initialize shader, generate GL texture und register CUDA resource
+         */
+        void initTextureInteroperation();
 
-    // Cuda resources for CUDA-OpenGL interoperability
-    cudaGraphicsResource* m_texture_resource;
+        /**
+         * Initiate Hardware ZED Camera with a basic parameter preset.
+         * @param zed Reference to sl::Camera
+         * @param res Resolution type from sl::RESOLUTION
+         */
+        void initHardwareCamera(sl::Camera &zed, RESOLUTION res);
 
-    // GL Texture and Shader for Rendering
-    const char *m_texture_shader_paths[2] = { SHADERS_PATH "/ScreenFill.vert", SHADERS_PATH "/SimpleTexture.frag"};
-    CVK::ShaderSimpleTexture *m_texture_shader;
-    GLuint m_display_texture;
+        /**
+         * Initiate ZED Camera from SVO file with a basic parameter preset.
+         * @param zed Reference to sl::Camera
+         * @param res Resolution type from sl::RESOLUTION
+         */
+        void initSVOZedCamera(sl::Camera &zed, const char* path_to_file);
 
-public:
-    ZedAdapter(int width, int height);
+    public:
+        /**
+         * Constructor for Hardware Camera Adapter
+         * @param zed Reference to sl::Camera
+         * @param res Resolution type from sl::RESOLUTION
+         */
+        ZedAdapter(Camera &zed, RESOLUTION resolution);
 
-    void initCamera();
-    void grab();
-    void retrieveRawImage();
+        /**
+         * Constructor for SVO file Camera Adapter
+         * @param zed Reference to sl::Camera
+         * @param res Resolution type from sl::RESOLUTION
+         * @param path_to_svo_file path to file location
+         */
+        ZedAdapter(Camera &zed, RESOLUTION resolution, const char* path_to_svo_file);
 
-    void imageToGlTexture();
+        /**
+         * Transfer a sl::Mat saved on GPU into a GL texture
+         * @param zed_img sl::Mat image
+         */
+        void imageToGlTexture(Mat &zed_img);
 
-    void renderImage();
-
-    void clean();
-};
-
-    // *** Deprecated *** //
-    void initZedCamera(sl::Camera &zed, const char* path_to_file);
-    void initBasicZedCameraHD720(sl::Camera &zed);
-    void initSVOZedCamera(sl::Camera &zed, const char* path_to_file);
-
+        /**
+         * Render the last generated sl::Mat
+         */
+        void renderImage();
+    };
 }
 
 #endif //MODEL_BASED_TRACKER_ZED_HELPER_H
