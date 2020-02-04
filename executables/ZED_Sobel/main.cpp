@@ -28,15 +28,8 @@ cudaGraphicsResource* pcuImageRes; // Cuda resources for CUDA-OpenGL interoperab
 
 int main(int argc, char **argv)
 {
-    glfwInit();
-    //Init Window
-    window = glfwCreateWindow(width, height, "ZED Sobel", NULL, NULL);
-    glfwSetWindowPos( window, 50, 50);
-    glfwMakeContextCurrent(window);
-
-    // Init ZED with default parameter without depth vision
-    mt::initZedCamera(zed, argv[1]);
-    glewInit();
+    window = initGLWindow(window, width, height, "ZED Sobel", BLACK);
+    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720);
 
     // Create shader program that uses the switchRedAndBlue fragment shader
     const char *shadernames[1] = {SHADERS_PATH "/RedToGrayScale.frag"};
