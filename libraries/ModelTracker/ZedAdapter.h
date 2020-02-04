@@ -9,6 +9,7 @@
 
 #include "helper_functions.h"
 #include "ErrorHandling/HANDLE_CUDA_ERROR.h"
+#include "ErrorHandling/HANDLE_ZED_ERROR.h"
 
 using namespace sl;
 

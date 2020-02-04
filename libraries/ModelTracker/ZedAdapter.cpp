@@ -64,7 +64,7 @@ void mt::ZedAdapter::initHardwareCamera(sl::Camera &zed, RESOLUTION res)
     init_parameters.camera_resolution = res;
     init_parameters.camera_fps = 60.f;
     init_parameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    zed.open(init_parameters);
+    HANDLE_ZED_ERROR(zed.open(init_parameters));
 }
 
 void mt::ZedAdapter::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
@@ -73,10 +73,5 @@ void mt::ZedAdapter::initSVOZedCamera(sl::Camera &zed, const char* path_to_file)
     sl::InitParameters init_parameters;
     init_parameters.svo_input_filename.set(path_to_file);
     init_parameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-    sl::ERROR_CODE err = zed.open(init_parameters);
-
-    // ERRCODE display
-    if (err != sl::SUCCESS) {
-        zed.close();
-    }
+    HANDLE_ZED_ERROR(zed.open(init_parameters));
 }
