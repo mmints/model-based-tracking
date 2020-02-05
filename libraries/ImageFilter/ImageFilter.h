@@ -13,6 +13,7 @@
 namespace filter
 {
     void normalizeColor(const sl::Mat &in_zed, sl::Mat &out_zed);
+    void convertBGRtoRGB(const sl::Mat &in_zed, sl::Mat &out_zed);
     void sobelFilter(const sl::Mat &in_zed, sl::Mat &out_zed);
     void meanFilter(const sl::Mat &in_zed, sl::Mat &out_zed, int radius);
 }
