@@ -45,6 +45,8 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_depth_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_edge_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
 
+    printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
+
     // Init Particles
     initializeParticles(particle_count, particle_width, particle_height, 1.8f);
 

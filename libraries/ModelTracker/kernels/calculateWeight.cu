@@ -1,6 +1,23 @@
 #include "ModelTracker/kernel_functions.h"
+#include <cstdlib>
 
 texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
+
+__device__ void compare(float &weight, const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel, const int threshold)
+{
+        int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
+        int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
+        int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
+
+        if (diff_x < threshold && diff_y < threshold && diff_z < threshold)
+        {
+            weight = 1.f;
+        }
+        else {
+            weight = 0.f;
+        }
+}
+
 
 __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
@@ -10,21 +27,26 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // use unsigned integer because the numbers can become very large
     uint32_t particle_grid_texture_x = threadIdx.x + blockIdx.x * blockDim.x;
     uint32_t particle_grid_texture_y = threadIdx.y + blockIdx.y * blockDim.y;
+    uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, particle_grid_texture_y);
 
     // Transfer particle grid pixel coordinate to ZED pixel coordinate
     uint32_t zed_x = (particle_grid_texture_x % particle_width) * particle_scale;
     uint32_t zed_y = (particle_grid_texture_y % particle_height) * particle_scale;
     uint32_t offset = zed_x + zed_y * step; // Flat coordinate to memory space
 
-    float weight = 0.f;
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / particle_width) + (int)(particle_grid_texture_y / particle_height) * particle_grid_dimension;
 
-    // Just for testing
-    weight = (float) particle_index;
-    weight_memory[particle_index] = weight;
+    // Calculate weight per pixel
+    float weight = 0.f;
 
-    //atomicAdd(&weight_memory[particle_index], weight);
+    // Give every pixel the weight 1, so the sum should be particle_width x particle_height
+    weight = 1.f;
+    atomicAdd(&weight_memory[particle_index], weight);
+
+
+/*    // Fill the weight array with particle indexes for testing
+    weight_memory[particle_index] = (float) particle_index;*/
 }
 
 void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid)

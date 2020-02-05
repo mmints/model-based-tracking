@@ -34,6 +34,7 @@ void mt::ParticleFilter::calculateWeightColor(sl::Mat in, mt::ParticleGrid &part
     // TODO: Temporary, because we want to set the particle weight from all likelihoods
     for (int i = 0; i < m_particle_count; i++) {
         particleGrid.m_particles[i].setWeight(m_color_weight_memory[i]);
+        m_color_weight_memory[i] = 0.f;
     }
 
 }

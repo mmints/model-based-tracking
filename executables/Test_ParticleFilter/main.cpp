@@ -1,21 +1,18 @@
-#include <CVK_2/CVK_Framework.h>
+//#include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 
-#include <ErrorHandling/HANDLE_CUDA_ERROR.h>
-#include <Shader/ShaderSimple.h>
+//#include <cuda_gl_interop.h>
+//#include <sl/Camera.hpp>
+
 #include <ModelTracker/ModelTracker.h>
-
-#include <cuda_gl_interop.h>
-#include <sl/Camera.hpp>
-
 #include "kernel.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 100
+#define PARTICLE_COUNT 400
 
-#define PARTICLE_WIDTH WIDTH
-#define PARTICLE_HEIGHT HEIGHT
+#define PARTICLE_WIDTH WIDTH   / 10
+#define PARTICLE_HEIGHT HEIGHT / 10
 
 using namespace sl;
 
@@ -26,11 +23,15 @@ int main()
         window = initGLWindow(window, WIDTH, HEIGHT, "Test - Particle Filter", BLACK);
 
     Camera zed;
-    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, "~/bachelor_thesis/HD720_BENCHMARK.svo");
+    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, "~/bachelor_thesis/test.svo");
 
     // Creating Color Particle Grid
     mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
     particleGrid.renderColorTexture();
+
+    printf("**** SIZE OF PARTICLE GRID ***** \n");
+    printf("Dimension: %i \n", particleGrid.getParticleGridDimension());
+    printf("Particle Resolution: %i x %i \n", particleGrid.getParticleWidth(), particleGrid.getParticleHeight());
 
     // Create particleFilter and map gl_texture on cuda_array
     cudaArray *tex_array;
@@ -38,8 +39,10 @@ int main()
     particleFilter.mapGLTextureToCudaArray(particleGrid.getColorTexture(), tex_array);
 
     // zed interopertion
-    Mat zed_in_img  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
-    Mat zed_out_img =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat img_raw  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat img_rgb =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat img_out =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+
 
     while(!glfwWindowShouldClose( window))
     {
@@ -47,13 +50,15 @@ int main()
         particleGrid.renderColorTexture();
 
         HANDLE_ZED_ERROR(zed.grab());
-        HANDLE_ZED_ERROR(zed.retrieveImage(zed_in_img, VIEW_LEFT, MEM_GPU));
-        // callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
+        HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
 
-        particleFilter.convertBGRtoRGB(zed_in_img, zed_out_img);
-        particleFilter.calculateWeightColor(zed_out_img, particleGrid);
+        particleFilter.convertBGRtoRGB(img_raw, img_rgb);
 
-        zedAdapter.imageToGlTexture(zed_out_img);
+        //callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
+
+        particleFilter.calculateWeightColor(img_rgb, particleGrid);
+
+        zedAdapter.imageToGlTexture(img_rgb);
         zedAdapter.renderImage();
 
         glfwSwapBuffers( window);
@@ -61,8 +66,9 @@ int main()
     }
 
     printf("CLEAN UP... \n");
-    zed_in_img.free();
-    zed_out_img.free();
+    img_raw.free();
+    img_rgb.free();
+    img_out.free();
     zed.close();
     printf("DONE \n");
 

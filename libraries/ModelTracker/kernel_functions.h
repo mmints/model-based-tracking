@@ -5,11 +5,12 @@
  * This is the collection of all kernel functions
  * that are in use in the ModelTracker.
  */
+#include <device_launch_parameters.h>
+
 #include "ParticleGrid.h"
 #include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 
 #include <cuda_runtime.h>
-#include <device_launch_parameters.h>
 #include <sl/Camera.hpp>
 
 namespace mt

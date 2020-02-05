@@ -1,6 +1,7 @@
 #ifndef MT_PARTICLEFILTER_H
 #define MT_PARTICLEFILTER_H
 
+#include "kernel_functions.h"
 #include <CVK_2/CVK_Framework.h>
 #include "ParticleGrid.h"
 
@@ -11,7 +12,6 @@
 #include <sl/Camera.hpp>
 
 #include <ImageFilter/ImageFilter.h>
-#include "kernel_functions.h"
 
 namespace mt
 {
