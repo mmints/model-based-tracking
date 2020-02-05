@@ -12,7 +12,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1
+#define PARTICLE_COUNT 100
 
 #define PARTICLE_WIDTH WIDTH
 #define PARTICLE_HEIGHT HEIGHT
@@ -34,7 +34,7 @@ int main()
 
     // Create particleFilter and map gl_texture on cuda_array
     cudaArray *tex_array;
-    mt::ParticleFilter particleFilter;
+    mt::ParticleFilter particleFilter(particleGrid);
     particleFilter.mapGLTextureToCudaArray(particleGrid.getColorTexture(), tex_array);
 
     // zed interopertion
@@ -51,6 +51,7 @@ int main()
         // callKernel(zed_in_img.getPtr<sl::uchar4>(MEM_GPU), zed_out_img.getPtr<sl::uchar4>(MEM_GPU), zed_in_img.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
 
         particleFilter.convertBGRtoRGB(zed_in_img, zed_out_img);
+        particleFilter.calculateWeightColor(zed_out_img, particleGrid);
 
         zedAdapter.imageToGlTexture(zed_out_img);
         zedAdapter.renderImage();
@@ -64,6 +65,10 @@ int main()
     zed_out_img.free();
     zed.close();
     printf("DONE \n");
+
+    for (auto& particle : particleGrid.m_particles) {
+        printf(" WEIGHT: %f \n", particle.getWeight());
+    }
 
     glfwDestroyWindow( window);
     glfwTerminate();

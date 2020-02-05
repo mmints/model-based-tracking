@@ -21,9 +21,10 @@ class ParticleGrid
 {
 private:
     // Particles and ParticleGrid Parameters
-    std::vector<mt::Particle> m_particles;
     CVK::Node *m_model = nullptr;
     int m_particle_count;
+    int m_particle_width;
+    int m_particle_height;
     int m_particle_grid_dimension; // particle_grid_rows == particle_gird_columns == particle_dimension
 
     // Shader paths
@@ -64,6 +65,7 @@ private:
     void generateLinearDistributedRotationMatrix(glm::vec3 &random_angle);
 
 public:
+    std::vector<mt::Particle> m_particles;
     ParticleGrid(std::string path_to_model, int particle_width, int particle_height, int particle_count);
 
     /**
@@ -119,6 +121,11 @@ public:
      * @return edge texture id
      */
     GLuint getEdgeTexture();
+
+    int getParticleWidth();
+    int getParticleHeight();
+    int getParticleCount();
+    int getParticleGridDimension();
 
     /**
      * Update all particle in the grid by redistribution the models.

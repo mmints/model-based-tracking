@@ -15,6 +15,9 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_particle_count = particle_count;
     m_particle_grid_dimension = (int)std::sqrt(particle_count);
 
+    m_particle_width = particle_width;
+    m_particle_height = particle_height;
+
     // Set Shader
     m_color_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_color_shader_paths);
     m_normals_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_normals_shader_paths);
@@ -196,3 +199,22 @@ void ParticleGrid::generateLinearDistributedRotationMatrix(glm::vec3 &random_ang
     glm::vec3 max_angle = glm::vec3(2 * M_PI);
     random_angle = glm::linearRand(min_angle, max_angle);
 }
+
+int ParticleGrid::getParticleWidth() {
+    return m_particle_width;
+}
+
+int ParticleGrid::getParticleHeight() {
+    return m_particle_height;
+}
+
+int ParticleGrid::getParticleCount() {
+    return m_particle_count;
+}
+
+int ParticleGrid::getParticleGridDimension() {
+    return m_particle_grid_dimension;
+}
+
+
+
