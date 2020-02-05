@@ -59,6 +59,12 @@ int main()
         glfwPollEvents();
     }
 
+    printf("CLEAN UP... \n");
+    zed_in_img.free();
+    zed_out_img.free();
+    zed.close();
+    printf("DONE \n");
+
     glfwDestroyWindow( window);
     glfwTerminate();
     return 0;
