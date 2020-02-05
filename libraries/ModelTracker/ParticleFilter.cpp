@@ -8,3 +8,8 @@ void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t 
     HANDLE_CUDA_ERROR(cudaGraphicsSubResourceGetMappedArray(&texture_array, m_texture_resource, 0, 0));
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &m_texture_resource));
 }
+
+void mt::ParticleFilter::convertBGRtoRGB(sl::Mat in, sl::Mat out)
+{
+    filter::convertBGRtoRGB(in, out);
+}

@@ -5,6 +5,10 @@
 #include <cuda_gl_interop.h>
 #include <ErrorHandling/HANDLE_CUDA_ERROR.h>
 
+#include <sl/Camera.hpp>
+
+#include <ImageFilter/ImageFilter.h>
+
 namespace mt
 {
 
@@ -16,7 +20,7 @@ private:
 
 public:
     void mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array);
-
+    void convertBGRtoRGB(sl::Mat in, sl::Mat out);
 };
 
 }
