@@ -48,7 +48,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height, 1.8f);
+    initializeParticles(particle_count, particle_width, particle_height, 0.f);
 
     // Set Back Ground Color of the Current GL Instance
     CVK::State::getInstance()->setBackgroundColor(BLACK);
