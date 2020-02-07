@@ -49,10 +49,6 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     compare(weight, particle_grid_pixel_value, zed_in[offset], 80);
 
     atomicAdd(&weight_memory[particle_index], weight);
-
-
-/*    // Fill the weight array with particle indexes for testing
-    weight_memory[particle_index] = (float) particle_index;*/
 }
 
 void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid)
