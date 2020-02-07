@@ -3,13 +3,22 @@
 mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
 {
     m_particle_count = particleGrid.getParticleCount();
-    m_color_weight_memory = new float[m_particle_count];
 
-    // Allocate and register memory
+    // Allocate weight memory on host
+    m_color_weight_memory   = new float[m_particle_count];
+    m_depth_weight_memory   = new float[m_particle_count];
+    m_normals_weight_memory = new float[m_particle_count];
+
+    // Allocate weight memory on device
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_color_weight_memory, m_particle_count * sizeof(float)));
-    mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
-}
+    HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_depth_weight_memory, m_particle_count * sizeof(float)));
+    HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_normals_weight_memory, m_particle_count * sizeof(float)));
 
+    // Register and map texture to CudaArray
+    mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
+    mapGLTextureToCudaArray(particleGrid.getDepthTexture(), m_depth_texture_array);
+    mapGLTextureToCudaArray(particleGrid.getNormalTexture(), m_normals_texture_array);
+}
 
 void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array)
 {
@@ -20,20 +29,23 @@ void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t 
     HANDLE_CUDA_ERROR(cudaGraphicsUnmapResources(1, &m_texture_resource));
 }
 
-void mt::ParticleFilter::convertBGRtoRGB(sl::Mat in, sl::Mat out)
-{
-    filter::convertBGRtoRGB(in, out);
-}
-
 void mt::ParticleFilter::calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid)
 {
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_color_weight_memory, m_color_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
     mt::calculateWeight(in, dev_color_weight_memory, m_color_texture_array, particleGrid);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_color_weight_memory, dev_color_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
+}
 
-    // TODO: Temporary, because we want to set the particle weight from all likelihoods
-    for (int i = 0; i < m_particle_count; i++) {
-        particleGrid.m_particles[i].setWeight(m_color_weight_memory[i]);
-        m_color_weight_memory[i] = 0.f;
-    }
+void mt::ParticleFilter::calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid)
+{
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_depth_weight_memory, m_depth_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    mt::calculateWeight(in, dev_depth_weight_memory, m_depth_texture_array, particleGrid);
+    HANDLE_CUDA_ERROR(cudaMemcpy(m_depth_weight_memory, dev_depth_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
+}
+
+void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid)
+{
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_normals_weight_memory, m_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    mt::calculateWeight(in, dev_normals_weight_memory, m_normals_texture_array, particleGrid);
+    HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }

@@ -4,6 +4,7 @@
 //#include <sl/Camera.hpp>
 
 #include <ModelTracker/ModelTracker.h>
+#include <ImageFilter/ImageFilter.h>
 #include "kernel.h"
 
 #define WIDTH 1280
@@ -33,15 +34,20 @@ int main(int argc, char **argv)
     printf("Dimension: %i \n", particleGrid.getParticleGridDimension());
     printf("Particle Resolution: %i x %i \n", particleGrid.getParticleWidth(), particleGrid.getParticleHeight());
 
-    // Create particleFilter and map gl_texture on cuda_array
-    cudaArray *tex_array;
     mt::ParticleFilter particleFilter(particleGrid);
-    particleFilter.mapGLTextureToCudaArray(particleGrid.getColorTexture(), tex_array);
+
+    // Create particleFilter and map gl_texture on cuda_array
+    cudaArray *tex_array; // Only for the testing Kernel
+    particleFilter.mapGLTextureToCudaArray(particleGrid.getColorTexture(), tex_array); // Only for the testing Kernel
 
     // zed interopertion
     Mat img_raw  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
     Mat img_rgb =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
-    Mat img_out =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat img_depth =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+    Mat img_normals =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+
+
+    Mat img_out =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU); // Only for the testing Kernel
 
 
     while(!glfwWindowShouldClose( window))
@@ -49,15 +55,20 @@ int main(int argc, char **argv)
         //particleGrid.update(0.2f, 0.0f);
         particleGrid.renderColorTexture();
 
-        //HANDLE_ZED_ERROR(zed.grab());
         zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
+        HANDLE_ZED_ERROR(zed.retrieveImage(img_depth, VIEW_DEPTH, MEM_GPU));        // MEASURE_DEPTH needs sl::MAT_TYPE_32F_C1
+        HANDLE_ZED_ERROR(zed.retrieveImage(img_normals, VIEW_NORMALS, MEM_GPU));    // MEASURE_NORMALS needs sl::MAT_TYPE_32F_C4
 
-        particleFilter.convertBGRtoRGB(img_raw, img_rgb);
+        filter::convertBGRtoRGB(img_raw, img_rgb);
 
+        // This Kernel Renders the selected texture from the particle grid into the ZED frame
         callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
 
+        // Calculate the weights
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
+        particleFilter.calculateWeightDepth(img_depth, particleGrid);
+        particleFilter.calculateWeightNormals(img_normals, particleGrid);
 
         zedAdapter.imageToGlTexture(img_out);
         zedAdapter.renderImage();
@@ -69,13 +80,11 @@ int main(int argc, char **argv)
     printf("CLEAN UP... \n");
     img_raw.free();
     img_rgb.free();
+    img_depth.free();
+    img_normals.free();
     img_out.free();
     zed.close();
     printf("DONE \n");
-
-/*    for (auto& particle : particleGrid.m_particles) {
-        printf(" WEIGHT: %f \n", particle.getWeight());
-    }*/
 
     glfwDestroyWindow( window);
     glfwTerminate();

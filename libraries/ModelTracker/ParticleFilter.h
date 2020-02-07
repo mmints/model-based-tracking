@@ -11,8 +11,6 @@
 
 #include <sl/Camera.hpp>
 
-#include <ImageFilter/ImageFilter.h>
-
 namespace mt
 {
 
@@ -25,13 +23,18 @@ private:
 
     // Weight array memory space
     float *m_color_weight_memory;
+    float *m_depth_weight_memory;
+    float *m_normals_weight_memory;
 
     // Cuda Memory and Resources
     cudaGraphicsResource* m_texture_resource;
     cudaArray_t m_color_texture_array;
+    cudaArray_t m_depth_texture_array;
+    cudaArray_t m_normals_texture_array;
 
-
-    float *dev_color_weight_memory; // Pointer to Cuda Memory Space
+    float *dev_color_weight_memory;
+    float *dev_depth_weight_memory;
+    float *dev_normals_weight_memory;
 
 
     // Private Functions
@@ -40,11 +43,10 @@ public:
     ParticleFilter(mt::ParticleGrid &particleGrid);
     void mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array);
 
-    // Filter
-    void convertBGRtoRGB(sl::Mat in, sl::Mat out);
-
     // weight Calculation
     void calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid);
+    void calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid);
+    void calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid);
 };
 
 }
