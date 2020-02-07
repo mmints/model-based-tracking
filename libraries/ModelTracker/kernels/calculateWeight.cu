@@ -5,6 +5,12 @@ texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
 __device__ void compare(float &weight, const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel, const int threshold)
 {
+        if (particle_pixel.x == 0 && particle_pixel.y == 0 && particle_pixel.z == 0)
+        {
+            weight = 0.f;
+            return;
+        }
+
         int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
         int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
         int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
@@ -40,8 +46,8 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate weight per pixel
     float weight = 0.f;
 
-    // Give every pixel the weight 1, so the sum should be particle_width x particle_height
-    weight = 1.f;
+    compare(weight, particle_grid_pixel_value, zed_in[offset], 80);
+
     atomicAdd(&weight_memory[particle_index], weight);
 
 

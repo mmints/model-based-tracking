@@ -35,6 +35,10 @@ void mt::ParticleFilter::calculateWeightColor(sl::Mat in, mt::ParticleGrid &part
     for (int i = 0; i < m_particle_count; i++) {
         particleGrid.m_particles[i].setWeight(m_color_weight_memory[i]);
         m_color_weight_memory[i] = 0.f;
-    }
 
+        if (particleGrid.m_particles[i].getWeight() > 5.f){
+            printf("FIT: Particle %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+        }
+
+    }
 }

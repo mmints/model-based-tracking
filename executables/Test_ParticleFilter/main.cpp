@@ -9,25 +9,25 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 1
 
-#define PARTICLE_WIDTH WIDTH   / 10
-#define PARTICLE_HEIGHT HEIGHT / 10
+#define PARTICLE_WIDTH WIDTH   / 1
+#define PARTICLE_HEIGHT HEIGHT / 1
 
 using namespace sl;
 
 GLFWwindow* window;
 
-int main()
+int main(int argc, char **argv)
 {
         window = initGLWindow(window, WIDTH, HEIGHT, "Test - Particle Filter", BLACK);
 
     Camera zed;
-    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, "~/bachelor_thesis/test.svo");
+    mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, argv[1]);
 
     // Creating Color Particle Grid
     mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
-    particleGrid.renderColorTexture();
+    // particleGrid.renderColorTexture();
 
     printf("**** SIZE OF PARTICLE GRID ***** \n");
     printf("Dimension: %i \n", particleGrid.getParticleGridDimension());
@@ -46,19 +46,20 @@ int main()
 
     while(!glfwWindowShouldClose( window))
     {
-        particleGrid.update(0.2f, 0.8f);
+        //particleGrid.update(0.2f, 0.0f);
         particleGrid.renderColorTexture();
 
-        HANDLE_ZED_ERROR(zed.grab());
+        //HANDLE_ZED_ERROR(zed.grab());
+        zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
 
         particleFilter.convertBGRtoRGB(img_raw, img_rgb);
 
-        //callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
+        callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
 
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
 
-        zedAdapter.imageToGlTexture(img_rgb);
+        zedAdapter.imageToGlTexture(img_out);
         zedAdapter.renderImage();
 
         glfwSwapBuffers( window);
@@ -72,9 +73,9 @@ int main()
     zed.close();
     printf("DONE \n");
 
-    for (auto& particle : particleGrid.m_particles) {
+/*    for (auto& particle : particleGrid.m_particles) {
         printf(" WEIGHT: %f \n", particle.getWeight());
-    }
+    }*/
 
     glfwDestroyWindow( window);
     glfwTerminate();
