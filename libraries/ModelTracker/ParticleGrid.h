@@ -134,6 +134,12 @@ public:
      */
     void update(float rotation_deviation, float translation_deviation);
 
+    /**
+     * Sorts the particle in the grid by weight from havy to light.
+     * So: particle[0] -> Heaviest | particle[N] -> Lightest
+     */
+    void sortParticlesByWeight();
+
 };
 
 }

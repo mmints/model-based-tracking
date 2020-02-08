@@ -218,5 +218,13 @@ int ParticleGrid::getParticleGridDimension() {
     return m_particle_grid_dimension;
 }
 
+void ParticleGrid::sortParticlesByWeight()
+{
+    sort( m_particles.begin( ), m_particles.end( ), [ ](Particle lhs, Particle& rhs )
+    {
+        return lhs.getWeight() > rhs.getWeight();
+    });
+}
+
 
 
