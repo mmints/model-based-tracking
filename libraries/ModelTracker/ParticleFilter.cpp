@@ -8,11 +8,17 @@ mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
     m_color_weight_memory   = new float[m_particle_count];
     m_depth_weight_memory   = new float[m_particle_count];
     m_normals_weight_memory = new float[m_particle_count];
+    m_edge_weight_memory = new float[m_particle_count]; // TODO: Not implemented jet!
+    m_sum_weight_memory = new float[m_particle_count];
+
 
     // Allocate weight memory on device
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_color_weight_memory, m_particle_count * sizeof(float)));
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_depth_weight_memory, m_particle_count * sizeof(float)));
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_normals_weight_memory, m_particle_count * sizeof(float)));
+    HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_edge_weight_memory, m_particle_count * sizeof(float)));  // TODO: Not implemented jet!
+    HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_sum_weight_memory, m_particle_count * sizeof(float)));
+
 
     // Register and map texture to CudaArray
     mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
@@ -49,3 +55,9 @@ void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &pa
     mt::calculateWeight(in, dev_normals_weight_memory, m_normals_texture_array, particleGrid);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
+
+void mt::ParticleFilter::sumWeights()
+{
+    mt::sumWeights(dev_color_weight_memory, dev_depth_weight_memory, dev_normals_weight_memory, dev_edge_weight_memory, dev_sum_weight_memory, m_particle_count);
+}
+

@@ -70,6 +70,8 @@ int main(int argc, char **argv)
         particleFilter.calculateWeightDepth(img_depth, particleGrid);
         particleFilter.calculateWeightNormals(img_normals, particleGrid);
 
+        particleFilter.sumWeights();
+
         zedAdapter.imageToGlTexture(img_out);
         zedAdapter.renderImage();
 
@@ -84,6 +86,7 @@ int main(int argc, char **argv)
     img_normals.free();
     img_out.free();
     zed.close();
+    HANDLE_CUDA_ERROR(cudaDeviceReset());
     printf("DONE \n");
 
     glfwDestroyWindow( window);

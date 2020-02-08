@@ -25,6 +25,8 @@ private:
     float *m_color_weight_memory;
     float *m_depth_weight_memory;
     float *m_normals_weight_memory;
+    float *m_edge_weight_memory; // TODO: Not implemented jet!
+    float *m_sum_weight_memory;
 
     // Cuda Memory and Resources
     cudaGraphicsResource* m_texture_resource;
@@ -35,18 +37,24 @@ private:
     float *dev_color_weight_memory;
     float *dev_depth_weight_memory;
     float *dev_normals_weight_memory;
+    float *dev_edge_weight_memory; // TODO: Not implemented jet!
+    float *dev_sum_weight_memory;
 
 
     // Private Functions
 
 public:
     ParticleFilter(mt::ParticleGrid &particleGrid);
+
     void mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array);
 
     // weight Calculation
     void calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid);
+
+    void sumWeights();
+
 };
 
 }
