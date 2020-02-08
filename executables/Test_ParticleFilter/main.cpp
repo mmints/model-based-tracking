@@ -10,10 +10,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1
+#define PARTICLE_COUNT 1024
 
-#define PARTICLE_WIDTH WIDTH   / 1
-#define PARTICLE_HEIGHT HEIGHT / 1
+#define PARTICLE_WIDTH WIDTH   / 10
+#define PARTICLE_HEIGHT HEIGHT / 10
 
 using namespace sl;
 
@@ -69,6 +69,8 @@ int main(int argc, char **argv)
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
         particleFilter.calculateWeightDepth(img_depth, particleGrid);
         particleFilter.calculateWeightNormals(img_normals, particleGrid);
+
+        particleFilter.setParticleWeight(particleGrid);
 
         zedAdapter.imageToGlTexture(img_out);
         zedAdapter.renderImage();

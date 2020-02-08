@@ -57,12 +57,52 @@ void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &pa
     HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
+
+void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
+{
+    for (int i = 0; i < m_particle_count; i++)
+    {
+        m_sum_weight_memory[i] = 0.f;
+        m_sum_weight_memory[i] += m_color_weight_memory[i];
+        m_sum_weight_memory[i] += m_depth_weight_memory[i];
+        m_sum_weight_memory[i] += m_normals_weight_memory[i];
+        m_sum_weight_memory[i] += m_edge_weight_memory[i];
+
+        particleGrid.m_particles[i].setWeight(m_sum_weight_memory[i]);
+
+        m_color_weight_memory[i] = 0.f;
+        m_depth_weight_memory[i] = 0.f;
+        m_normals_weight_memory[i] = 0.f;
+        m_edge_weight_memory[i] = 0.f;
+    }
+}
+
+
+// *** This implementation of the setParticleWeight is done with kernel functions and less momory allocation and copying
+//     But it does not work jet. Probably because sumWeights is buggy.
+//     If there are large performance issues I should have a look back here.
+// TODO: Try to fix this
+
+/*void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
+{
+    sumWeights();
+    HANDLE_CUDA_ERROR(cudaMemcpy(m_sum_weight_memory, dev_sum_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < m_particle_count; i++)
+    {
+        particleGrid.m_particles[i].setWeight(m_sum_weight_memory[i]);
+    }
+    setWeightsToZero();
+}*/
+
 // **** Private Functions **** //
 
+// TODO: Probably does not work
 void mt::ParticleFilter::sumWeights()
 {
     mt::sumWeights(dev_color_weight_memory, dev_depth_weight_memory, dev_normals_weight_memory, dev_edge_weight_memory, dev_sum_weight_memory, m_particle_count);
 }
+
 
 void mt::ParticleFilter::setWeightsToZero()
 {

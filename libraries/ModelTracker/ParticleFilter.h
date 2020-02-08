@@ -42,7 +42,7 @@ private:
 
 
     // Private Functions
-    void sumWeights();
+    void sumWeights();  // TODO: Probably does not work
     void setWeightsToZero();
 
 
@@ -56,6 +56,8 @@ public:
     void calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid);
     // TODO: Edge Weight Calculation
+
+    void setParticleWeight(ParticleGrid &particleGrid);
 
 
 };
