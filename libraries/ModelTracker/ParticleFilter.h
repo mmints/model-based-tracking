@@ -42,6 +42,9 @@ private:
 
 
     // Private Functions
+    void sumWeights();
+    void setWeightsToZero();
+
 
 public:
     ParticleFilter(mt::ParticleGrid &particleGrid);
@@ -52,8 +55,8 @@ public:
     void calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid);
+    // TODO: Edge Weight Calculation
 
-    void sumWeights();
 
 };
 
