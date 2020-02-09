@@ -10,7 +10,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1024
+#define PARTICLE_COUNT 400
 
 #define PARTICLE_WIDTH WIDTH   / 10
 #define PARTICLE_HEIGHT HEIGHT / 10
@@ -52,8 +52,10 @@ int main(int argc, char **argv)
 
     while(!glfwWindowShouldClose( window))
     {
-        //particleGrid.update(0.2f, 0.0f);
+        particleGrid.update(0.4f, 0.2f);
         particleGrid.renderColorTexture();
+        particleGrid.renderDepthTexture();
+        particleGrid.renderNormalTexture();
 
         zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
@@ -62,15 +64,16 @@ int main(int argc, char **argv)
 
         filter::convertBGRtoRGB(img_raw, img_rgb);
 
-        // This Kernel Renders the selected texture from the particle grid into the ZED frame
-        callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
 
         // Calculate the weights
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
         particleFilter.calculateWeightDepth(img_depth, particleGrid);
         particleFilter.calculateWeightNormals(img_normals, particleGrid);
 
+        // This Kernel Renders the selected texture from the particle grid into the ZED frame
+        callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
         particleFilter.setParticleWeight(particleGrid);
+        particleFilter.resample(particleGrid, 20);
 
         zedAdapter.imageToGlTexture(img_out);
         zedAdapter.renderImage();
@@ -78,6 +81,8 @@ int main(int argc, char **argv)
         glfwSwapBuffers( window);
         glfwPollEvents();
     }
+
+    particleGrid.sortParticlesByWeight();
 
     printf("CLEAN UP... \n");
     img_raw.free();
@@ -88,6 +93,18 @@ int main(int argc, char **argv)
     zed.close();
     HANDLE_CUDA_ERROR(cudaDeviceReset());
     printf("DONE \n");
+
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+        printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+    }
+
+
+/*
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+        printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+    }
+*/
+
 
     glfwDestroyWindow( window);
     glfwTerminate();
