@@ -43,6 +43,9 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / particle_width) + (int)(particle_grid_texture_y / particle_height) * particle_grid_dimension;
 
+    // DEBUG TRICK
+    // weight_memory[particle_index] = (float) particle_index;
+
     // Calculate weight per pixel
     float weight = 0.f;
 
