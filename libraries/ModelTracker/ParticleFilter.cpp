@@ -77,6 +77,44 @@ void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
     }
 }
 
+void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
+{
+    printf("RESAMPLE DEBUG\n");
+
+    particleGrid.sortParticlesByWeight();
+    mt::Particle heaviest_particle = particleGrid.m_particles[0]; // Get the heaviest particle for rendering before refilling particleGrid.m_particles
+    printf("HAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
+
+    for (int i = 0; i < threshold; i++) {
+
+        m_top_particles.push_back(particleGrid.m_particles[i]);
+        printf("Set [%i] Particle W: %f \t", i, m_top_particles[i].getWeight());
+
+        // Normalize
+        m_top_particles[i].setWeight(m_top_particles[i].getWeight() / heaviest_particle.getWeight());
+        printf("NORMAL [%i] Particle W: %f \n", i, m_top_particles[i].getWeight());
+
+    }
+
+    float pick = 0.2;
+    for (int i = 0; i < m_particle_count; i++)
+    {
+        if (pick > 1.0)
+            pick = 0.2;
+
+        if (m_top_particles[i % threshold].getWeight() < pick) {
+            particleGrid.m_particles[i] = m_top_particles[(i % threshold) + 1];
+            pick += pick;
+            continue;
+        }
+        else {
+            particleGrid.m_particles[i] = m_top_particles[(i % threshold)];
+            pick += pick;
+        }
+    }
+
+    m_top_particles.clear();
+}
 
 // *** This implementation of the setParticleWeight is done with kernel functions and less momory allocation and copying
 //     But it does not work jet. Probably because sumWeights is buggy.
@@ -97,6 +135,7 @@ void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
 
 // **** Private Functions **** //
 
+
 // TODO: Probably does not work
 void mt::ParticleFilter::sumWeights()
 {
@@ -113,4 +152,3 @@ void mt::ParticleFilter::setWeightsToZero()
 
     mt::setZeroArray(dev_sum_weight_memory, m_particle_count);
 }
-
