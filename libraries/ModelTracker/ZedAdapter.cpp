@@ -14,7 +14,11 @@ mt::ZedAdapter::ZedAdapter(Camera &zed, RESOLUTION resolution, const char* path_
     setResolution(resolution);
     printf("Initialize ZED with resolution: %i x %i \n", m_width, m_height);
 
-    initSVOZedCamera(zed, path_to_svo_file);
+    if (path_to_svo_file)
+        initSVOZedCamera(zed, path_to_svo_file);
+    else
+        initHardwareCamera(zed, resolution);
+
     initTextureInteroperation();
 }
 

@@ -1,6 +1,7 @@
 #ifndef HANDLE_CUDA_ERROR_H
 #define HANDLE_CUDA_ERROR_H
 
+#include <iostream>
 #include <cuda_runtime_api.h>
 
 static void handleCudaError( cudaError_t err,

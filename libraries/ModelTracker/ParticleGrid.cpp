@@ -15,6 +15,9 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_particle_count = particle_count;
     m_particle_grid_dimension = (int)std::sqrt(particle_count);
 
+    m_particle_width = particle_width;
+    m_particle_height = particle_height;
+
     // Set Shader
     m_color_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_color_shader_paths);
     m_normals_shader = new ShaderSimple( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_normals_shader_paths);
@@ -42,8 +45,10 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_depth_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_edge_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
 
+    printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
+
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height, 1.8f);
+    initializeParticles(particle_count, particle_width, particle_height, 0.f);
 
     // Set Back Ground Color of the Current GL Instance
     CVK::State::getInstance()->setBackgroundColor(BLACK);
@@ -153,6 +158,29 @@ GLuint ParticleGrid::getEdgeTexture()
     return m_edge_fbo->getColorTexture(0);
 }
 
+int ParticleGrid::getParticleWidth() {
+    return m_particle_width;
+}
+
+int ParticleGrid::getParticleHeight() {
+    return m_particle_height;
+}
+
+int ParticleGrid::getParticleCount() {
+    return m_particle_count;
+}
+
+int ParticleGrid::getParticleGridDimension() {
+    return m_particle_grid_dimension;
+}
+
+void ParticleGrid::sortParticlesByWeight()
+{
+    sort( m_particles.begin( ), m_particles.end( ), [ ](Particle lhs, Particle& rhs )
+    {
+        return lhs.getWeight() > rhs.getWeight();
+    });
+}
 
 // *** Private Functions *** //
 
