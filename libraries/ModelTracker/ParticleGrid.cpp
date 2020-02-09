@@ -158,6 +158,29 @@ GLuint ParticleGrid::getEdgeTexture()
     return m_edge_fbo->getColorTexture(0);
 }
 
+int ParticleGrid::getParticleWidth() {
+    return m_particle_width;
+}
+
+int ParticleGrid::getParticleHeight() {
+    return m_particle_height;
+}
+
+int ParticleGrid::getParticleCount() {
+    return m_particle_count;
+}
+
+int ParticleGrid::getParticleGridDimension() {
+    return m_particle_grid_dimension;
+}
+
+void ParticleGrid::sortParticlesByWeight()
+{
+    sort( m_particles.begin( ), m_particles.end( ), [ ](Particle lhs, Particle& rhs )
+    {
+        return lhs.getWeight() > rhs.getWeight();
+    });
+}
 
 // *** Private Functions *** //
 
@@ -201,30 +224,3 @@ void ParticleGrid::generateLinearDistributedRotationMatrix(glm::vec3 &random_ang
     glm::vec3 max_angle = glm::vec3(2 * M_PI);
     random_angle = glm::linearRand(min_angle, max_angle);
 }
-
-int ParticleGrid::getParticleWidth() {
-    return m_particle_width;
-}
-
-int ParticleGrid::getParticleHeight() {
-    return m_particle_height;
-}
-
-int ParticleGrid::getParticleCount() {
-    return m_particle_count;
-}
-
-int ParticleGrid::getParticleGridDimension() {
-    return m_particle_grid_dimension;
-}
-
-void ParticleGrid::sortParticlesByWeight()
-{
-    sort( m_particles.begin( ), m_particles.end( ), [ ](Particle lhs, Particle& rhs )
-    {
-        return lhs.getWeight() > rhs.getWeight();
-    });
-}
-
-
-
