@@ -44,7 +44,6 @@ private:
     float *dev_edge_weight_memory; // TODO: Not implemented jet!
     float *dev_sum_weight_memory;
 
-
     // Private Functions
     void sumWeights();  // TODO: Probably does not work
     void setWeightsToZero();
