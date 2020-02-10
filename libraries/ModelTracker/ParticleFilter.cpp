@@ -92,7 +92,6 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
     //printf("RESAMPLE DEBUG\n");
 
     particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
-    mt::Particle heaviest_particle = particleGrid.m_particles[0]; // Get the heaviest particle for rendering before refilling particleGrid.m_particles
     //printf("HEAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
 
     for (int i = 0; i < threshold; i++)
@@ -101,7 +100,11 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
         //printf("Set [%i] Particle W: %f \t", i, m_top_particles[i].getWeight());
 
         // Normalize
-        m_top_particles[i].setWeight(m_top_particles[i].getWeight() / heaviest_particle.getWeight());
+        if ( particleGrid.m_particles[0].getWeight() > 0.f) {
+            m_top_particles[i].setWeight(m_top_particles[i].getWeight() /  particleGrid.m_particles[0].getWeight());
+        } else{
+            m_top_particles[i].setWeight(0.f);
+        }
         //printf("NORMAL [%i] Particle W: %f \n", i, m_top_particles[i].getWeight());
     }
 
