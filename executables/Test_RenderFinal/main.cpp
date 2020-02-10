@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         zedAdapter.imageToGlTexture(img_rgb);
         zedAdapter.renderImage();
 
-        glClear(GL_DEPTH_BUFFER_BIT);
+/*        glClear(GL_DEPTH_BUFFER_BIT);
 
         CVK::State::getInstance()->setShader( &simple_shader);
         simple_shader.useProgram();
@@ -55,8 +55,9 @@ int main(int argc, char **argv)
         model.setModelMatrix(particleGrid.m_particles[0].getModelMatrix());
         glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         model.render();
-        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );*/
 
+        particleGrid.renderFirstParticleToScreen();
         particleGrid.update(0.1f, 0.1f);
 
         glfwSwapBuffers( window);

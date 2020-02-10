@@ -9,7 +9,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 1024
 
 #define PARTICLE_WIDTH WIDTH   / 10
 #define PARTICLE_HEIGHT HEIGHT / 10
@@ -63,6 +63,8 @@ int main(int argc, char **argv)
 
         filter::convertBGRtoRGB(img_raw, img_rgb);
 
+        zedAdapter.imageToGlTexture(img_rgb);
+        zedAdapter.renderImage();
 
         // Calculate the weights
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
@@ -73,10 +75,10 @@ int main(int argc, char **argv)
 
          particleGrid.sortParticlesByWeight();
 
-        if (particleGrid.m_particles[0].getWeight() > 7000.f) {
+        if (particleGrid.m_particles[0].getWeight() > 100.f) {
             printf("\n *** FOUND %i*** \n", measure_count);
             printf("WEIGHT: %f \n", particleGrid.m_particles[0].getWeight());
-            measure_count++;
+            particleGrid.renderFirstParticleToScreen();
         }
 
         bool checker = false;
@@ -94,7 +96,7 @@ int main(int argc, char **argv)
         }
         measure_count++;
 
-        particleFilter.resample(particleGrid, 20);
+        particleFilter.resample(particleGrid, 60);
 
         for (int i = 0; i < PARTICLE_COUNT; i++) {
             if (particleGrid.m_particles[i].getWeight() < 0.f) {
@@ -106,8 +108,7 @@ int main(int argc, char **argv)
         if (checker)
             break;
 
-        zedAdapter.imageToGlTexture(img_rgb);
-        zedAdapter.renderImage();
+
 
         glfwSwapBuffers( window);
         glfwPollEvents();
