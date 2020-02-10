@@ -53,6 +53,11 @@ private:
     GLuint m_view_matrix_handler_depth;
     GLuint m_projection_matrix_handler_depth;
 
+    // Full Screen Rendering
+    glm::mat4 m_fullscreen_projection_matrix;
+    GLuint m_fullscreen_projection_matrix_handler;
+
+
     // FBOs
     CVK::FBO *m_color_fbo = nullptr;
     CVK::FBO *m_normals_fbo = nullptr;
@@ -139,6 +144,8 @@ public:
      * So: particle[0] -> Heaviest | particle[N] -> Lightest
      */
     void sortParticlesByWeight();
+
+    void renderFirstParticleToScreen();
 
 };
 

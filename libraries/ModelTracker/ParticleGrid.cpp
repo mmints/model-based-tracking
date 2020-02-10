@@ -39,6 +39,10 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_view_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "viewMatrix");
     m_projection_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "projectionMatrix");
 
+    // Full Screen Rendering
+    m_fullscreen_projection_matrix = glm::perspective(glm::radians(40.0f), (float) 1280/720, 1.0f, 100.0f);
+    m_fullscreen_projection_matrix_handler = glGetUniformLocation(m_color_shader->getProgramID(), "projectionMatrix");
+
     // Set FBOs
     m_color_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_normals_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
@@ -48,7 +52,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height, 0.f);
+    initializeParticles(particle_count, particle_width, particle_height, 0.8f);
 
     // Set Back Ground Color of the Current GL Instance
     CVK::State::getInstance()->setBackgroundColor(BLACK);
@@ -180,6 +184,23 @@ void ParticleGrid::sortParticlesByWeight()
     {
         return lhs.getWeight() > rhs.getWeight();
     });
+}
+
+void ParticleGrid::renderFirstParticleToScreen()
+{
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    CVK::State::getInstance()->setShader(m_color_shader);
+    m_color_shader->useProgram();
+
+    glUniformMatrix4fv(m_view_matrix_handler_color, 1, GL_FALSE, value_ptr(m_view_matrix));
+    glUniformMatrix4fv(m_fullscreen_projection_matrix_handler, 1, GL_FALSE, value_ptr(m_fullscreen_projection_matrix));
+
+    glViewport(0, 0, 1280, 720);
+    m_model->setModelMatrix(m_particles[0].getModelMatrix());
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    m_model->render();
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 // *** Private Functions *** //
