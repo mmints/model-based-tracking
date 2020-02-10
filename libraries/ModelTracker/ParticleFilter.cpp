@@ -11,15 +11,25 @@ mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
     m_edge_weight_memory = new float[m_particle_count]; // TODO: Not implemented jet!
     m_sum_weight_memory = new float[m_particle_count];
 
-
     // Allocate weight memory on device
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_color_weight_memory, m_particle_count * sizeof(float)));
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_depth_weight_memory, m_particle_count * sizeof(float)));
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_normals_weight_memory, m_particle_count * sizeof(float)));
     HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_edge_weight_memory, m_particle_count * sizeof(float)));  // TODO: Not implemented jet!
-    HANDLE_CUDA_ERROR(cudaMalloc((void**) &dev_sum_weight_memory, m_particle_count * sizeof(float)));
 
-    setWeightsToZero();
+    // Set array to 0.f
+    for (int i = 0; i < m_particle_count; i++)
+    {
+        m_sum_weight_memory[i] = 0.f;
+        m_color_weight_memory[i] = 0.f;
+        m_depth_weight_memory[i] = 0.f;
+        m_normals_weight_memory[i] = 0.f;
+        m_edge_weight_memory[i] = 0.f;
+    }
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_color_weight_memory, m_color_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_depth_weight_memory, m_depth_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_normals_weight_memory, m_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_edge_weight_memory, m_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
 
     // Register and map texture to CudaArray
     mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
@@ -81,7 +91,7 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
 {
     //printf("RESAMPLE DEBUG\n");
 
-    particleGrid.sortParticlesByWeight();
+    particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
     mt::Particle heaviest_particle = particleGrid.m_particles[0]; // Get the heaviest particle for rendering before refilling particleGrid.m_particles
     //printf("HEAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
 
@@ -113,41 +123,4 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
     }
 
     m_top_particles.clear();
-}
-
-// *** This implementation of the setParticleWeight is done with kernel functions and less momory allocation and copying
-//     But it does not work jet. Probably because sumWeights is buggy.
-//     If there are large performance issues I should have a look back here.
-// TODO: Try to fix this
-
-/*void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
-{
-    sumWeights();
-    HANDLE_CUDA_ERROR(cudaMemcpy(m_sum_weight_memory, dev_sum_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
-
-    for (int i = 0; i < m_particle_count; i++)
-    {
-        particleGrid.m_particles[i].setWeight(m_sum_weight_memory[i]);
-    }
-    setWeightsToZero();
-}*/
-
-// **** Private Functions **** //
-
-
-// TODO: Probably does not work
-void mt::ParticleFilter::sumWeights()
-{
-    mt::sumWeights(dev_color_weight_memory, dev_depth_weight_memory, dev_normals_weight_memory, dev_edge_weight_memory, dev_sum_weight_memory, m_particle_count);
-}
-
-
-void mt::ParticleFilter::setWeightsToZero()
-{
-    mt::setZeroArray(dev_color_weight_memory, m_particle_count);
-    mt::setZeroArray(dev_depth_weight_memory, m_particle_count);
-    mt::setZeroArray(dev_normals_weight_memory, m_particle_count);
-    mt::setZeroArray(dev_edge_weight_memory, m_particle_count);
-
-    mt::setZeroArray(dev_sum_weight_memory, m_particle_count);
 }
