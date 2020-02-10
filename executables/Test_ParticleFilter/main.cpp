@@ -5,7 +5,6 @@
 
 #include <ModelTracker/ModelTracker.h>
 #include <ImageFilter/ImageFilter.h>
-#include "kernel.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -30,7 +29,7 @@ int main(int argc, char **argv)
     mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
     // particleGrid.renderColorTexture();
 
-    printf("**** SIZE OF PARTICLE GRID ***** \n");
+    printf("\n **** SIZE OF PARTICLE GRID ***** \n");
     printf("Dimension: %i \n", particleGrid.getParticleGridDimension());
     printf("Particle Resolution: %i x %i \n", particleGrid.getParticleWidth(), particleGrid.getParticleHeight());
 
@@ -49,7 +48,7 @@ int main(int argc, char **argv)
 
     Mat img_out =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU); // Only for the testing Kernel
 
-
+    int measure_count = 0;
     while(!glfwWindowShouldClose( window))
     {
         particleGrid.update(0.4f, 0.2f);
@@ -70,12 +69,44 @@ int main(int argc, char **argv)
         particleFilter.calculateWeightDepth(img_depth, particleGrid);
         particleFilter.calculateWeightNormals(img_normals, particleGrid);
 
-        // This Kernel Renders the selected texture from the particle grid into the ZED frame
-        callKernel(img_rgb.getPtr<sl::uchar4>(MEM_GPU), img_out.getPtr<sl::uchar4>(MEM_GPU), img_rgb.getStep(MEM_GPU), WIDTH, HEIGHT, tex_array);
         particleFilter.setParticleWeight(particleGrid);
+
+         particleGrid.sortParticlesByWeight();
+
+        if (particleGrid.m_particles[0].getWeight() > 7000.f) {
+            printf("\n *** FOUND %i*** \n", measure_count);
+            printf("WEIGHT: %f \n", particleGrid.m_particles[0].getWeight());
+            measure_count++;
+        }
+
+        bool checker = false;
+        printf("\n **** MEASUREMENT %i ***** \n", measure_count);
+        for (int i = 0; i < PARTICLE_COUNT; i++) {
+            if (particleGrid.m_particles[i].getWeight() > 0.f) {
+                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+            }
+
+            if (particleGrid.m_particles[i].getWeight() < 0.f) {
+                printf("\n **** FUUUUUCK ***** \n");
+                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+                //checker = true;
+            }
+        }
+        measure_count++;
+
         particleFilter.resample(particleGrid, 20);
 
-        zedAdapter.imageToGlTexture(img_out);
+        for (int i = 0; i < PARTICLE_COUNT; i++) {
+            if (particleGrid.m_particles[i].getWeight() < 0.f) {
+                printf("\n **** RESAMPING FAILURE ***** \n");
+                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
+                checker = true;
+            }
+        }
+        if (checker)
+            break;
+
+        zedAdapter.imageToGlTexture(img_rgb);
         zedAdapter.renderImage();
 
         glfwSwapBuffers( window);
@@ -93,18 +124,6 @@ int main(int argc, char **argv)
     zed.close();
     HANDLE_CUDA_ERROR(cudaDeviceReset());
     printf("DONE \n");
-
-    for (int i = 0; i < PARTICLE_COUNT; i++) {
-        printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
-    }
-
-
-/*
-    for (int i = 0; i < PARTICLE_COUNT; i++) {
-        printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
-    }
-*/
-
 
     glfwDestroyWindow( window);
     glfwTerminate();

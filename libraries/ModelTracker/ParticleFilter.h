@@ -42,12 +42,6 @@ private:
     float *dev_depth_weight_memory;
     float *dev_normals_weight_memory;
     float *dev_edge_weight_memory; // TODO: Not implemented jet!
-    float *dev_sum_weight_memory;
-
-    // Private Functions
-    void sumWeights();  // TODO: Probably does not work
-    void setWeightsToZero();
-
 
 public:
     ParticleFilter(mt::ParticleGrid &particleGrid);
