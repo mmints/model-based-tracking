@@ -5,6 +5,18 @@ texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
 __device__ void compare(float &weight, const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel, const int threshold)
 {
+    int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
+    int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
+    int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
+
+    float sum = diff_x + diff_y + diff_z;
+    sum /= (255.f*3.f);
+
+    weight = 1.f -sum;
+    weight*=weight;
+    weight*=weight;
+    weight*=weight;
+    /*
         if (particle_pixel.x == 0 && particle_pixel.y == 0 && particle_pixel.z == 0)
         {
             weight = 0.f;
@@ -21,7 +33,7 @@ __device__ void compare(float &weight, const uchar4 &particle_pixel, const sl::u
         }
         else {
             weight = 0.f;
-        }
+        }*/
 }
 
 
@@ -34,6 +46,9 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     uint32_t particle_grid_texture_x = threadIdx.x + blockIdx.x * blockDim.x;
     uint32_t particle_grid_texture_y = threadIdx.y + blockIdx.y * blockDim.y;
     uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, particle_grid_texture_y);
+
+    if (particle_grid_pixel_value.x <= 0 && particle_grid_pixel_value.y <= 0 && particle_grid_pixel_value.z <= 0)
+        return;
 
     // Transfer particle grid pixel coordinate to ZED pixel coordinate
     uint32_t zed_x = (particle_grid_texture_x % particle_width) * particle_scale;
@@ -49,7 +64,7 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate weight per pixel
     float weight = 0.f;
 
-    compare(weight, particle_grid_pixel_value, zed_in[offset], 80);
+    compare(weight, particle_grid_pixel_value, zed_in[offset], 500);
 
     atomicAdd(&weight_memory[particle_index], weight);
 }

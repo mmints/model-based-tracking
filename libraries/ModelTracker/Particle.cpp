@@ -44,7 +44,7 @@ glm::mat4 mt::Particle::getModelMatrix() {
 
     glm::mat4 rotation_matrix = rotation_x * rotation_y * rotation_z;
     glm::mat4 translation_matrix = glm::translate(glm::mat4(1.f), m_translation_vector);
-    return translation_matrix * rotation_matrix * glm::scale(glm::mat4(1.f), glm::vec3(1.2f));
+    return translation_matrix * rotation_matrix * glm::scale(glm::mat4(1.f), glm::vec3(1.3f));
 }
 
 glm::vec3 mt::Particle::getTranslation() {

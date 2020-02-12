@@ -52,7 +52,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height, 0.8f);
+    initializeParticles(particle_count, particle_width, particle_height, 0.f);
 
     // Set Back Ground Color of the Current GL Instance
     CVK::State::getInstance()->setBackgroundColor(BLACK);
@@ -207,13 +207,13 @@ void ParticleGrid::renderFirstParticleToScreen()
 
 void ParticleGrid::initializeParticles(int particle_count, int width, int height, float distribution_radius)
 {
-    glm::vec3 scene_center = glm::vec3(0.f);
-    glm::vec3 rotation_angles;
+    glm::vec3 scene_center = glm::vec3(2.f, -1.5f, 0.f);
+    glm::vec3 rotation_angles = glm::vec3(0.f);
     glm::vec3 translation_vector;
 
     for (int i = 0; i < particle_count; i++)
     {
-        generateLinearDistributedRotationMatrix(rotation_angles);
+        // generateLinearDistributedRotationMatrix(rotation_angles);
         translation_vector = glm::gaussRand(scene_center, glm::vec3(distribution_radius));
         mt::Particle particle(width, height, 0.f, translation_vector, rotation_angles);
         m_particles.push_back(particle);

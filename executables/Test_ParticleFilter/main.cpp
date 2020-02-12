@@ -9,10 +9,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1024
+#define PARTICLE_COUNT 400
 
-#define PARTICLE_WIDTH WIDTH   / 10
-#define PARTICLE_HEIGHT HEIGHT / 10
+#define PARTICLE_WIDTH WIDTH   / 3
+#define PARTICLE_HEIGHT HEIGHT / 3
 
 using namespace sl;
 
@@ -51,14 +51,14 @@ int main(int argc, char **argv)
     int measure_count = 0;
     while(!glfwWindowShouldClose( window))
     {
-        particleGrid.update(0.4f, 0.2f);
+        particleGrid.update(0.2f, 0.f);
         particleGrid.renderColorTexture();
-        particleGrid.renderDepthTexture();
+ //       particleGrid.renderDepthTexture();
         particleGrid.renderNormalTexture();
 
         zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
-        HANDLE_ZED_ERROR(zed.retrieveImage(img_depth, VIEW_DEPTH, MEM_GPU));        // MEASURE_DEPTH needs sl::MAT_TYPE_32F_C1
+//        HANDLE_ZED_ERROR(zed.retrieveImage(img_depth, VIEW_DEPTH, MEM_GPU));        // MEASURE_DEPTH needs sl::MAT_TYPE_32F_C1
         HANDLE_ZED_ERROR(zed.retrieveImage(img_normals, VIEW_NORMALS, MEM_GPU));    // MEASURE_NORMALS needs sl::MAT_TYPE_32F_C4
 
         filter::convertBGRtoRGB(img_raw, img_rgb);
@@ -68,18 +68,18 @@ int main(int argc, char **argv)
 
         // Calculate the weights
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
-        particleFilter.calculateWeightDepth(img_depth, particleGrid);
-        particleFilter.calculateWeightNormals(img_normals, particleGrid);
+//        particleFilter.calculateWeightDepth(img_depth, particleGrid);
+       // particleFilter.calculateWeightNormals(img_normals, particleGrid);
 
         particleFilter.setParticleWeight(particleGrid);
 
-         particleGrid.sortParticlesByWeight();
+        // particleGrid.sortParticlesByWeight();
 
-        if (particleGrid.m_particles[0].getWeight() > 100.f) {
+/*        if (particleGrid.m_particles[0].getWeight() > 100.f) {
             printf("\n *** FOUND %i*** \n", measure_count);
             printf("WEIGHT: %f \n", particleGrid.m_particles[0].getWeight());
             particleGrid.renderFirstParticleToScreen();
-        }
+        }*/
 
         bool checker = false;
         printf("\n **** MEASUREMENT %i ***** \n", measure_count);
@@ -96,7 +96,8 @@ int main(int argc, char **argv)
         }
         measure_count++;
 
-        particleFilter.resample(particleGrid, 60);
+        particleFilter.resample(particleGrid, (int)PARTICLE_COUNT * 0.2f);
+        particleGrid.renderFirstParticleToScreen();
 
         for (int i = 0; i < PARTICLE_COUNT; i++) {
             if (particleGrid.m_particles[i].getWeight() < 0.f) {
