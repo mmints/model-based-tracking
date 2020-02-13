@@ -197,9 +197,14 @@ void ParticleGrid::renderFirstParticleToScreen()
     glUniformMatrix4fv(m_fullscreen_projection_matrix_handler, 1, GL_FALSE, value_ptr(m_fullscreen_projection_matrix));
 
     glViewport(0, 0, 1280, 720);
-    m_model->setModelMatrix(m_particles[0].getModelMatrix());
+
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    m_model->render();
+    for (int i = 0; i < 10; i++)
+    {
+        m_model->setModelMatrix(m_particles[i].getModelMatrix());
+        m_model->render();
+
+    }
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
