@@ -30,7 +30,10 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     uint32_t particle_grid_texture_y = threadIdx.y + blockIdx.y * blockDim.y;
     uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, particle_grid_texture_y);
 
-    // Transfer particle grid pixel coordinate to ZED pixel coordinate
+    if (particle_grid_pixel_value.x <= 0 && particle_grid_pixel_value.y <= 0 && particle_grid_pixel_value.z <= 0)
+        return;
+
+        // Transfer particle grid pixel coordinate to ZED pixel coordinate
     uint32_t zed_x = (particle_grid_texture_x % particle_width) * particle_scale;
     uint32_t zed_y = (particle_grid_texture_y % particle_height) * particle_scale;
     uint32_t offset = zed_x + zed_y * step; // Flat coordinate to memory space
