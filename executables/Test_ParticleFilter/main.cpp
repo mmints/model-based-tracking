@@ -9,10 +9,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 1024
+#define PARTICLE_COUNT 16*16
 
-#define PARTICLE_WIDTH WIDTH   / 10
-#define PARTICLE_HEIGHT HEIGHT / 10
+#define PARTICLE_WIDTH WIDTH   / 2
+#define PARTICLE_HEIGHT HEIGHT / 2
 
 using namespace sl;
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     int measure_count = 0;
     while(!glfwWindowShouldClose( window))
     {
-        particleGrid.update(0.4f, 0.2f);
+        particleGrid.update(0.1f, .2f);
         particleGrid.renderColorTexture();
         particleGrid.renderDepthTexture();
         particleGrid.renderNormalTexture();
@@ -73,42 +73,8 @@ int main(int argc, char **argv)
 
         particleFilter.setParticleWeight(particleGrid);
 
-         particleGrid.sortParticlesByWeight();
-
-        if (particleGrid.m_particles[0].getWeight() > 100.f) {
-            printf("\n *** FOUND %i*** \n", measure_count);
-            printf("WEIGHT: %f \n", particleGrid.m_particles[0].getWeight());
-            particleGrid.renderFirstParticleToScreen();
-        }
-
-        bool checker = false;
-        printf("\n **** MEASUREMENT %i ***** \n", measure_count);
-        for (int i = 0; i < PARTICLE_COUNT; i++) {
-            if (particleGrid.m_particles[i].getWeight() > 0.f) {
-                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
-            }
-
-            if (particleGrid.m_particles[i].getWeight() < 0.f) {
-                printf("\n **** FUUUUUCK ***** \n");
-                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
-                //checker = true;
-            }
-        }
-        measure_count++;
-
         particleFilter.resample(particleGrid, 60);
-
-        for (int i = 0; i < PARTICLE_COUNT; i++) {
-            if (particleGrid.m_particles[i].getWeight() < 0.f) {
-                printf("\n **** RESAMPING FAILURE ***** \n");
-                printf("I: %i - W: %f \n", i, particleGrid.m_particles[i].getWeight());
-                checker = true;
-            }
-        }
-        if (checker)
-            break;
-
-
+        particleGrid.renderFirstParticleToScreen();
 
         glfwSwapBuffers( window);
         glfwPollEvents();
