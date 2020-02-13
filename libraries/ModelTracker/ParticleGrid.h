@@ -65,9 +65,8 @@ private:
     CVK::FBO *m_edge_fbo = nullptr;
 
     // Private Functions
-    void initializeParticles(int particle_count, int width, int height, float distribution_radius);
+    void initializeParticles(int particle_count, int width, int height);
     void renderParticleGrid();
-    void generateLinearDistributedRotationMatrix(glm::vec3 &random_angle);
 
 public:
     std::vector<mt::Particle> m_particles;
