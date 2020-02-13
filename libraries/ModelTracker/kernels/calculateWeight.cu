@@ -3,27 +3,22 @@
 
 texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
-__device__ void compare(float &weight, const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel, const int threshold)
+__device__ float colorWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
 {
-        if (particle_pixel.x == 0 && particle_pixel.y == 0 && particle_pixel.z == 0)
-        {
-            weight = 0.f;
-            return;
-        }
+    // calculate difference between pixel values
+    int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
+    int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
+    int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
 
-        int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
-        int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
-        int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
+    // Normalize total difference
+    float diff_total = diff_x + diff_y + diff_z;
+    diff_total /= (255.f*3.f);
 
-        if (diff_x < threshold && diff_y < threshold && diff_z < threshold)
-        {
-            weight = 1.f;
-        }
-        else {
-            weight = 0.f;
-        }
+    float weight = 1.f -diff_total;
+    weight*=weight;
+
+    return weight;
 }
-
 
 __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
@@ -43,13 +38,8 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / particle_width) + (int)(particle_grid_texture_y / particle_height) * particle_grid_dimension;
 
-    // DEBUG TRICK
-    // weight_memory[particle_index] = (float) particle_index;
-
-    // Calculate weight per pixel
     float weight = 0.f;
-
-    compare(weight, particle_grid_pixel_value, zed_in[offset], 80);
+    weight += colorWeight(particle_grid_pixel_value, zed_in[offset]);
 
     atomicAdd(&weight_memory[particle_index], weight);
 }
