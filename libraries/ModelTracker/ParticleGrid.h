@@ -57,7 +57,6 @@ private:
     glm::mat4 m_fullscreen_projection_matrix;
     GLuint m_fullscreen_projection_matrix_handler;
 
-
     // FBOs
     CVK::FBO *m_color_fbo = nullptr;
     CVK::FBO *m_normals_fbo = nullptr;

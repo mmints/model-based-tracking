@@ -149,10 +149,12 @@ GLuint ParticleGrid::getDepthTexture()
 
 void ParticleGrid::renderEdgeTexture()
 {
-    m_edge_fbo->bind();
-    m_sobel_shader->setTextureInput(0, getColorTexture());
+    m_sobel_shader->setTextureInput(0, m_color_fbo->getColorTexture(0));
     m_sobel_shader->useProgram();
     m_sobel_shader->update();
+
+    m_edge_fbo->bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_sobel_shader->render();
     m_edge_fbo->unbind();
 }
@@ -161,6 +163,8 @@ GLuint ParticleGrid::getEdgeTexture()
 {
     return m_edge_fbo->getColorTexture(0);
 }
+
+// *** Properties *** //
 
 int ParticleGrid::getParticleWidth() {
     return m_particle_width;
