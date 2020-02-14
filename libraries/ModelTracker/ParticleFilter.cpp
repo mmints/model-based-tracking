@@ -1,3 +1,4 @@
+#include <random>
 #include "ParticleFilter.h"
 
 mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
@@ -101,7 +102,7 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
 
     particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
     //printf("HEAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
-
+/*
     for (int i = 0; i < threshold; i++)
     {
         m_top_particles.push_back(particleGrid.m_particles[i]);
@@ -132,6 +133,17 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
             pick += pick;
         }
     }
+*/
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dis(0, threshold-1);
 
-    m_top_particles.clear();
+    std::vector<Particle> tmp;
+    for (int n=0; n<m_particle_count; ++n)
+        tmp.push_back(particleGrid.m_particles.at(dis(gen)));
+
+    particleGrid.m_particles = tmp;
+
+
+   // m_top_particles.clear();
 }
