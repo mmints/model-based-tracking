@@ -9,10 +9,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 16*16
+#define PARTICLE_COUNT 400
 
-#define PARTICLE_WIDTH WIDTH   / 2
-#define PARTICLE_HEIGHT HEIGHT / 2
+#define PARTICLE_WIDTH WIDTH   / 3
+#define PARTICLE_HEIGHT HEIGHT / 3
 
 using namespace sl;
 
@@ -48,13 +48,13 @@ int main(int argc, char **argv)
 
     while(!glfwWindowShouldClose( window))
     {
-        particleGrid.update(0.2f, .2f);
+        particleGrid.update(0.2f, .4f);
         particleGrid.renderColorTexture();
         particleGrid.renderEdgeTexture();
 
         zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
-       HANDLE_ZED_ERROR(zed.retrieveImage(img_gs, VIEW_LEFT_GRAY, MEM_GPU));
+        HANDLE_ZED_ERROR(zed.retrieveImage(img_gs, VIEW_LEFT_GRAY, MEM_GPU));
 
         // Preprocessing ZED
         filter::convertBGRtoRGB(img_raw, img_rgb);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         particleFilter.calculateWeightColor(img_rgb, particleGrid);
         particleFilter.calculateWeightEdge(img_edge, particleGrid);
         particleFilter.setParticleWeight(particleGrid);
-        particleFilter.resample(particleGrid, 40);
+        particleFilter.resample(particleGrid, (int)PARTICLE_COUNT * 0.2f);
 
         particleGrid.renderFirstParticleToScreen();
 
