@@ -35,6 +35,7 @@ mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
     mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
     mapGLTextureToCudaArray(particleGrid.getDepthTexture(), m_depth_texture_array);
     mapGLTextureToCudaArray(particleGrid.getNormalTexture(), m_normals_texture_array);
+    mapGLTextureToCudaArray(particleGrid.getEdgeTexture(), m_edge_texture_array);
 }
 
 void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array)
@@ -65,6 +66,13 @@ void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &pa
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_normals_weight_memory, m_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
     mt::calculateWeight(in, dev_normals_weight_memory, m_normals_texture_array, particleGrid);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
+}
+
+void mt::ParticleFilter::calculateWeightEdge(sl::Mat in, mt::ParticleGrid &particleGrid)
+{
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_edge_weight_memory, m_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    mt::calculateWeightEdge(in, dev_edge_weight_memory, m_edge_texture_array, particleGrid);
+    HANDLE_CUDA_ERROR(cudaMemcpy(m_edge_weight_memory, dev_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
 

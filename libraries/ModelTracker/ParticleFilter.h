@@ -37,6 +37,7 @@ private:
     cudaArray_t m_color_texture_array;
     cudaArray_t m_depth_texture_array;
     cudaArray_t m_normals_texture_array;
+    cudaArray_t m_edge_texture_array;
 
     float *dev_color_weight_memory;
     float *dev_depth_weight_memory;
@@ -52,7 +53,7 @@ public:
     void calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid);
     void calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid);
-    // TODO: Edge Weight Calculation
+    void calculateWeightEdge(sl::Mat in, mt::ParticleGrid &particleGrid);
 
     void setParticleWeight(ParticleGrid &particleGrid);
     void resample(ParticleGrid &particleGrid, int threshold);
