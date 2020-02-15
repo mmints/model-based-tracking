@@ -25,9 +25,9 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_sobel_shader = new ShaderSobel( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_sobel_shader_paths);
     m_sobel_shader->setResolution(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
-    // Set Matrices
-    m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    m_projection_matrix = glm::perspective(glm::radians(40.0f), (float) particle_width/particle_height, 1.0f, 100.0f);
+    // Set Matrices || view_matrix.z -> Distance Camera to object
+    m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 10.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    m_projection_matrix = glm::perspective(glm::radians(86.411667f), (float) particle_width/particle_height, 1.0f, 100.0f);
 
     // Set Matrix Handler
     m_view_matrix_handler_color = glGetUniformLocation(m_color_shader->getProgramID(), "viewMatrix");
@@ -40,7 +40,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_projection_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "projectionMatrix");
 
     // Full Screen Rendering
-    m_fullscreen_projection_matrix = glm::perspective(glm::radians(40.0f), (float) 1280/720, 1.0f, 100.0f);
+    m_fullscreen_projection_matrix = glm::perspective(glm::radians(86.411667f), (float) 1280/720, 1.0f, 100.0f);
     m_fullscreen_projection_matrix_handler = glGetUniformLocation(m_color_shader->getProgramID(), "projectionMatrix");
 
     // Set FBOs

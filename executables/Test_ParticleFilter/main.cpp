@@ -24,6 +24,15 @@ int main(int argc, char **argv)
 
     Camera zed;
     mt::ZedAdapter zedAdapter(zed, RESOLUTION_HD720, argv[1]);
+    CameraInformation info = zed.getCameraInformation();
+
+    printf("Focal X: %f \n ", info.calibration_parameters.left_cam.fx);
+    printf("Focal Y: %f \n ", info.calibration_parameters.left_cam.fy);
+    printf("Center X: %f \n ", info.calibration_parameters.left_cam.cx);
+    printf("Center Y: %f \n ", info.calibration_parameters.left_cam.cy);
+    printf("Horizontal FOV: %f \n ", info.calibration_parameters.left_cam.h_fov);
+    printf("Vertical FOV: %f \n ", info.calibration_parameters.left_cam.v_fov);
+    printf("Diagonal FOV: %f \n ", info.calibration_parameters.left_cam.d_fov);
 
     // Creating Color Particle Grid
     mt::ParticleGrid particleGrid(RESOURCES_PATH "/simple_cube/simple_cube.obj", PARTICLE_WIDTH, PARTICLE_HEIGHT, PARTICLE_COUNT);
