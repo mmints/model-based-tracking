@@ -26,6 +26,24 @@ sl::Mat gpuLeftImage;
 // Cuda resources for CUDA-OpenGL interoperability
 cudaGraphicsResource* pcuImageRes;
 
+sl::VIEW view = VIEW_LEFT;
+
+void charCallback (GLFWwindow *window, unsigned int key)
+{
+    switch (key)
+    {
+        case 'c':
+            view = VIEW_LEFT;
+            break;
+        case 'd':
+            view = VIEW_DEPTH;
+            break;
+        case 'n':
+            view = VIEW_NORMALS;
+            break;
+    }
+}
+
 int main()
 {
     glfwInit(); // Initial GLFW object for using GLFW functionalities
@@ -34,7 +52,7 @@ int main()
     window = glfwCreateWindow(width, height, "ZED Introduction", NULL, NULL);
     glfwSetWindowPos( window, 50, 50);
     glfwMakeContextCurrent(window);
-
+    glfwSetCharCallback (window, charCallback);
     glewInit();
 
     // Create shader program that uses the switchRedAndBlue fragment shader
@@ -79,7 +97,7 @@ int main()
     {
         int res = zed.grab(runtime_parameters);
 
-        if (zed.retrieveImage(gpuLeftImage, VIEW_DEPTH, MEM_GPU) == SUCCESS) {
+        if (zed.retrieveImage(gpuLeftImage, view, MEM_GPU) == SUCCESS) {
             cudaArray_t ArrIm;
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
