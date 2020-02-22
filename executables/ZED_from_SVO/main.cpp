@@ -26,6 +26,23 @@ GLuint imageTex;
 sl::Camera zed;
 sl::Mat gpuLeftImage;
 
+sl::VIEW view = VIEW_LEFT;
+
+void charCallback (GLFWwindow *window, unsigned int key)
+{
+    switch (key)
+    {
+        case 'c':
+            view = VIEW_LEFT;
+            break;
+        case 'd':
+            view = VIEW_DEPTH;
+            break;
+        case 'n':
+            view = VIEW_NORMALS;
+            break;
+    }
+}
 // Cuda resources for CUDA-OpenGL interoperability
 cudaGraphicsResource* pcuImageRes;
 
@@ -34,9 +51,10 @@ int main(int argc, char **argv)
     glfwInit(); // Initial GLFW object for using GLFW functionalities
 
     //Init Window
-    window = glfwCreateWindow(width, height, "ZED Introduction", NULL, NULL);
+    window = glfwCreateWindow(width, height, "ZED from SVO", NULL, NULL);
     glfwSetWindowPos( window, 50, 50);
     glfwMakeContextCurrent(window);
+    glfwSetCharCallback (window, charCallback);
 
     glewInit();
 
@@ -67,7 +85,7 @@ int main(int argc, char **argv)
     {
         int res = zed.grab();
 
-        if (zed.retrieveImage(gpuLeftImage, VIEW_LEFT, MEM_GPU) == SUCCESS) {
+        if (zed.retrieveImage(gpuLeftImage, view, MEM_GPU) == SUCCESS) {
             cudaArray_t ArrIm;
             cudaGraphicsMapResources(1, &pcuImageRes, 0);
             cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
