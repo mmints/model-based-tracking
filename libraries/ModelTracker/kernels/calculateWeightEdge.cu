@@ -3,24 +3,18 @@
 
 texture<uchar4, 2, cudaReadModeElementType> particle_grid_texture_ref;
 
-__device__ float colorWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
+__device__ float edgeWeight(const uchar4 &particle_pixel, const sl::uchar1 &zed_pixel)
 {
-    // calculate difference between pixel values
-    int diff_x = std::abs(particle_pixel.x - zed_pixel.x);
-    int diff_y = std::abs(particle_pixel.y - zed_pixel.y);
-    int diff_z = std::abs(particle_pixel.z - zed_pixel.z);
+    // particle_pixel.x == .y == .z -> see SobelFilter.frag
+    float diff = std::abs(particle_pixel.x - zed_pixel);
+    diff /= 255.f;
 
-    // Normalize total difference
-    float diff_total = diff_x + diff_y + diff_z;
-    diff_total /= (255.f*3.f);
-
-    float weight = 1.f -diff_total;
-    weight*=weight;
-
+    float weight = 1.f - diff;
+    weight *= weight;
     return weight;
 }
 
-__global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int particle_scale,
+__global__ void calculateWeightKernel(sl::uchar1 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
                                       float *weight_memory)
 {
@@ -28,7 +22,7 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // use unsigned integer because the numbers can become very large
     uint32_t particle_grid_texture_x = threadIdx.x + blockIdx.x * blockDim.x;
     uint32_t particle_grid_texture_y = threadIdx.y + blockIdx.y * blockDim.y;
-    uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, particle_grid_texture_y);
+    uchar4 particle_grid_pixel_value = tex2D(particle_grid_texture_ref, particle_grid_texture_x, -particle_grid_texture_y);
 
     if (particle_grid_pixel_value.x <= 0 && particle_grid_pixel_value.y <= 0 && particle_grid_pixel_value.z <= 0)
         return;
@@ -41,13 +35,11 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / particle_width) + (int)(particle_grid_texture_y / particle_height) * particle_grid_dimension;
 
-    float weight = 0.f;
-    weight += colorWeight(particle_grid_pixel_value, zed_in[offset]);
-
+    float weight = edgeWeight(particle_grid_pixel_value, zed_in[offset]);
     atomicAdd(&weight_memory[particle_index], weight);
 }
 
-void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid)
+void mt::calculateWeightEdge(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid)
 {
     HANDLE_CUDA_ERROR(cudaBindTextureToArray(particle_grid_texture_ref, particle_grid_tex_array));
 
@@ -60,7 +52,7 @@ void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaAr
     int particle_gird_dimension = particleGrid.getParticleGridDimension();
 
     int particle_scale = width / particle_width;
-    sl::uchar4 *in_zed_ptr = in_zed.getPtr<sl::uchar4>(sl::MEM_GPU);
+    sl::uchar1 *in_zed_ptr = in_zed.getPtr<sl::uchar1>(sl::MEM_GPU);
 
     const size_t BLOCKSIZE_X = 32;
     const size_t BLOCKSIZE_Y = 8;

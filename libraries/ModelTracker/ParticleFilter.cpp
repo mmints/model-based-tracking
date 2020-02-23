@@ -1,3 +1,4 @@
+#include <random>
 #include "ParticleFilter.h"
 
 mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
@@ -35,6 +36,7 @@ mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
     mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
     mapGLTextureToCudaArray(particleGrid.getDepthTexture(), m_depth_texture_array);
     mapGLTextureToCudaArray(particleGrid.getNormalTexture(), m_normals_texture_array);
+    mapGLTextureToCudaArray(particleGrid.getEdgeTexture(), m_edge_texture_array);
 }
 
 void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t &texture_array)
@@ -67,6 +69,13 @@ void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &pa
     HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
+void mt::ParticleFilter::calculateWeightEdge(sl::Mat in, mt::ParticleGrid &particleGrid)
+{
+    HANDLE_CUDA_ERROR(cudaMemcpy(dev_edge_weight_memory, m_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
+    mt::calculateWeightEdge(in, dev_edge_weight_memory, m_edge_texture_array, particleGrid);
+    HANDLE_CUDA_ERROR(cudaMemcpy(m_edge_weight_memory, dev_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
+}
+
 
 void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
 {
@@ -93,7 +102,7 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
 
     particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
     //printf("HEAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
-
+/*
     for (int i = 0; i < threshold; i++)
     {
         m_top_particles.push_back(particleGrid.m_particles[i]);
@@ -124,6 +133,17 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
             pick += pick;
         }
     }
+*/
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dis(0, threshold-1);
 
-    m_top_particles.clear();
+    std::vector<Particle> tmp;
+    for (int n=0; n<m_particle_count; ++n)
+        tmp.push_back(particleGrid.m_particles.at(dis(gen)));
+
+    particleGrid.m_particles = tmp;
+
+
+   // m_top_particles.clear();
 }

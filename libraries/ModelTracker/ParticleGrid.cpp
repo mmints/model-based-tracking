@@ -25,9 +25,9 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_sobel_shader = new ShaderSobel( VERTEX_SHADER_BIT|FRAGMENT_SHADER_BIT, m_sobel_shader_paths);
     m_sobel_shader->setResolution(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
-    // Set Matrices
-    m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 25.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    m_projection_matrix = glm::perspective(glm::radians(40.0f), (float) particle_width/particle_height, 1.0f, 100.0f);
+    // Set Matrices || view_matrix.z -> Distance Camera to object
+    m_view_matrix = glm::lookAt(glm::vec3(0.0, 0.0, 10.0f), glm::vec3(0.0f, 0.0, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    m_projection_matrix = glm::perspective(glm::radians(86.411667f), (float) particle_width/particle_height, 1.0f, 100.0f);
 
     // Set Matrix Handler
     m_view_matrix_handler_color = glGetUniformLocation(m_color_shader->getProgramID(), "viewMatrix");
@@ -40,7 +40,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_projection_matrix_handler_depth = glGetUniformLocation(m_depth_shader->getProgramID(), "projectionMatrix");
 
     // Full Screen Rendering
-    m_fullscreen_projection_matrix = glm::perspective(glm::radians(40.0f), (float) 1280/720, 1.0f, 100.0f);
+    m_fullscreen_projection_matrix = glm::perspective(glm::radians(86.411667f), (float) 1280/720, 1.0f, 100.0f);
     m_fullscreen_projection_matrix_handler = glGetUniformLocation(m_color_shader->getProgramID(), "projectionMatrix");
 
     // Set FBOs
@@ -52,7 +52,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
     // Init Particles
-    initializeParticles(particle_count, particle_width, particle_height, 0.8f);
+    initializeParticles(particle_count, particle_width, particle_height);
 
     // Set Back Ground Color of the Current GL Instance
     CVK::State::getInstance()->setBackgroundColor(BLACK);
@@ -149,10 +149,12 @@ GLuint ParticleGrid::getDepthTexture()
 
 void ParticleGrid::renderEdgeTexture()
 {
-    m_edge_fbo->bind();
-    m_sobel_shader->setTextureInput(0, getColorTexture());
+    m_sobel_shader->setTextureInput(0, m_color_fbo->getColorTexture(0));
     m_sobel_shader->useProgram();
     m_sobel_shader->update();
+
+    m_edge_fbo->bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_sobel_shader->render();
     m_edge_fbo->unbind();
 }
@@ -161,6 +163,8 @@ GLuint ParticleGrid::getEdgeTexture()
 {
     return m_edge_fbo->getColorTexture(0);
 }
+
+// *** Properties *** //
 
 int ParticleGrid::getParticleWidth() {
     return m_particle_width;
@@ -197,25 +201,27 @@ void ParticleGrid::renderFirstParticleToScreen()
     glUniformMatrix4fv(m_fullscreen_projection_matrix_handler, 1, GL_FALSE, value_ptr(m_fullscreen_projection_matrix));
 
     glViewport(0, 0, 1280, 720);
-    m_model->setModelMatrix(m_particles[0].getModelMatrix());
+
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    m_model->render();
+    for (int i = 0; i < 10; i++)
+    {
+        m_model->setModelMatrix(m_particles[i].getModelMatrix());
+        m_model->render();
+
+    }
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
 
 // *** Private Functions *** //
 
-void ParticleGrid::initializeParticles(int particle_count, int width, int height, float distribution_radius)
+void ParticleGrid::initializeParticles(int particle_count, int width, int height)
 {
     glm::vec3 scene_center = glm::vec3(0.f);
-    glm::vec3 rotation_angles;
-    glm::vec3 translation_vector;
+    glm::vec3 rotation_angles= glm::vec3(0.f);;
 
     for (int i = 0; i < particle_count; i++)
     {
-        generateLinearDistributedRotationMatrix(rotation_angles);
-        translation_vector = glm::gaussRand(scene_center, glm::vec3(distribution_radius));
-        mt::Particle particle(width, height, 0.f, translation_vector, rotation_angles);
+        mt::Particle particle(width, height, 0.f, scene_center, rotation_angles);
         m_particles.push_back(particle);
     }
 }
@@ -237,11 +243,4 @@ void ParticleGrid::renderParticleGrid()
             i++;
         }
     }
-}
-
-void ParticleGrid::generateLinearDistributedRotationMatrix(glm::vec3 &random_angle)
-{
-    glm::vec3 min_angle = glm::vec3(0.f);
-    glm::vec3 max_angle = glm::vec3(2 * M_PI);
-    random_angle = glm::linearRand(min_angle, max_angle);
 }

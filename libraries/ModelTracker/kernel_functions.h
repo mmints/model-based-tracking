@@ -16,6 +16,7 @@
 namespace mt
 {
     void calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid);
+    void calculateWeightEdge(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid);
     void sumWeights(float *color, float *depth, float *normals, float *edge, float *sum, int count);
     void setZeroArray(float* array, int count);
 }

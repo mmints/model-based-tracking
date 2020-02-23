@@ -36,15 +36,24 @@ public:
 	 */
 	void render();
 
+
+
     /**
- * Renders mirrored screen filling quad using this shader for coloring
+     * Renders a on X-axis mirrored screen filling quad using this shader for coloring
+     * @brief Renders screen filling quad
+     */
+    void renderNormalMap();
+
+    /**
+ * Renders a on Y and X-axis mirrored screen filling quad using this shader for coloring
  * @brief Renders screen filling quad
  */
     void renderZED();
 
 private:
 	CVK::Plane m_screenFillingQuad; //!< Used geometry for rendering
-    CVK::Plane m_screenFillingQuadZED; //!< Used geometry for rendering --- MIRRORED on X-Axis
+    CVK::Plane m_screenFillingQuadZED; //!< Used geometry for rendering --- MIRRORED on Y and X-Axis
+    CVK::Plane m_screenFillingQuadNormalMap; //!< Used geometry for rendering --- MIRRORED on X-Axis
 
 };
 
