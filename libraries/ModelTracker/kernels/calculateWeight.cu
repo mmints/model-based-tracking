@@ -20,6 +20,56 @@ __device__ float colorWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed
     return weight;
 }
 
+__device__ float normalsWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
+{
+    // Normalize ZED Normals
+    float n_x = zed_pixel.x / 255.f;
+    float n_y = zed_pixel.y / 255.f;
+    float n_z = zed_pixel.z / 255.f;
+
+    float n_accum = 0.f;
+    n_accum += n_x * n_x;
+    n_accum += n_y * n_y;
+    n_accum += n_z * n_z;
+
+    float n_norm = sqrt(n_accum);
+
+    // Normalize Particle Normals
+    float p_x = particle_pixel.x / 255.f;
+    float p_y = particle_pixel.y / 255.f;
+    float p_z = particle_pixel.z / 255.f;
+
+    float p_accum = 0.f;
+    p_accum += p_x * p_x;
+    p_accum += p_y * p_y;
+    p_accum += p_z * p_z;
+
+    float p_norm = sqrt(p_accum);
+
+    float cos_theta = (n_x * p_x + n_y * p_y + n_z * p_z) / (n_norm * p_norm); // cos theta = dot(n, p)/(n_norm * p_norm);
+    cos_theta *= cos_theta;
+
+    // cos_theta = weight -> if cos_theta == 0 -> angle btw. n and p is 90deg | If cos_theta == 1 -> n = p
+    return cos_theta;
+}
+
+__device__ float colorDepth(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
+{
+    // Use same function as for color. Depth data is provided in gray scale BUT in a uchar4 image.
+    // All channels have the same value, so only one is needed for calculation weight.
+
+    // calculate difference between pixel values
+    int diff = std::abs(particle_pixel.x - zed_pixel.x);
+
+    // Normalize difference
+    diff /= 255.f;
+
+    float weight = 1.f -diff;
+    weight*=weight;
+
+    return weight;
+}
+
 __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
                                       float *weight_memory)
@@ -41,6 +91,7 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
     // Calculate the index of the current corresponding particle to the given texel
     int particle_index = (int)(particle_grid_texture_x / particle_width) + (int)(particle_grid_texture_y / particle_height) * particle_grid_dimension;
 
+    // TODO: Calculate weight for all measurement types
     float weight = 0.f;
     weight += colorWeight(particle_grid_pixel_value, zed_in[offset]);
 
