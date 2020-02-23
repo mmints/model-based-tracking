@@ -20,6 +20,23 @@ __device__ float colorWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed
     return weight;
 }
 
+__device__ float depthWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
+{
+    // Use same function as for color. Depth data is provided in gray scale BUT in a uchar4 image.
+    // All channels have the same value, so only one is needed for calculation weight.
+
+    // calculate difference between pixel values
+    int diff = std::abs(particle_pixel.x - zed_pixel.x);
+
+    // Normalize difference
+    diff /= 255.f;
+
+    float weight = 1.f -diff;
+    weight*=weight;
+
+    return weight;
+}
+
 __device__ float normalsWeight(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
 {
     // Normalize ZED Normals
@@ -53,26 +70,9 @@ __device__ float normalsWeight(const uchar4 &particle_pixel, const sl::uchar4 &z
     return cos_theta;
 }
 
-__device__ float colorDepth(const uchar4 &particle_pixel, const sl::uchar4 &zed_pixel)
-{
-    // Use same function as for color. Depth data is provided in gray scale BUT in a uchar4 image.
-    // All channels have the same value, so only one is needed for calculation weight.
-
-    // calculate difference between pixel values
-    int diff = std::abs(particle_pixel.x - zed_pixel.x);
-
-    // Normalize difference
-    diff /= 255.f;
-
-    float weight = 1.f -diff;
-    weight*=weight;
-
-    return weight;
-}
-
 __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
-                                      float *weight_memory)
+                                      float *weight_memory, LIKELIHOOD type)
 {
     // Get the pixel value from particleGrid.texture (parts as particle_grid_texture_ref)
     // use unsigned integer because the numbers can become very large
@@ -93,12 +93,16 @@ __global__ void calculateWeightKernel(sl::uchar4 *zed_in, size_t step, int parti
 
     // TODO: Calculate weight for all measurement types
     float weight = 0.f;
-    weight += colorWeight(particle_grid_pixel_value, zed_in[offset]);
 
+    switch(type) {
+        case COLOR: weight = colorWeight(particle_grid_pixel_value, zed_in[offset]); break;
+        case DEPTH: weight = depthWeight(particle_grid_pixel_value, zed_in[offset]); break;
+        case NORMAL: weight = normalsWeight(particle_grid_pixel_value, zed_in[offset]); break;
+    }
     atomicAdd(&weight_memory[particle_index], weight);
 }
 
-void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid)
+void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaArray *particle_grid_tex_array, mt::ParticleGrid &particleGrid, LIKELIHOOD type)
 {
     HANDLE_CUDA_ERROR(cudaBindTextureToArray(particle_grid_texture_ref, particle_grid_tex_array));
 
@@ -124,7 +128,7 @@ void mt::calculateWeight(const sl::Mat &in_zed, float *dev_weight_memory, cudaAr
 
     calculateWeightKernel<<<dimGrid, dimBlock>>>(in_zed_ptr, step, particle_scale,
             particle_gird_dimension, particle_width, particle_height,
-            dev_weight_memory);
+            dev_weight_memory, type);
 
     HANDLE_CUDA_ERROR(cudaUnbindTexture(particle_grid_texture_ref));
 }
