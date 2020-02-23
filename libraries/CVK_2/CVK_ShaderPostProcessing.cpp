@@ -17,6 +17,14 @@ CVK::ShaderPostProcessing::ShaderPostProcessing( GLuint shader_mask, const char*
             glm::vec3( -1.f, 1.f, 0.f),
             glm::vec3( 1.f, 1.f, 0.f),
             glm::vec3( 1.f, -1.f, 0.f));
+
+    m_screenFillingQuadNormalMap.set_Points(
+            glm::vec3( 1.f, 1.f, 0.f),
+            glm::vec3( 1.f, -1.f, 0.f),
+            glm::vec3( -1.f, -1.f, 0.f),
+            glm::vec3( -1.f, 1.f, 0.f));
+
+
 }
 
 void CVK::ShaderPostProcessing::update()
@@ -28,6 +36,12 @@ void CVK::ShaderPostProcessing::render()
 {
 	m_screenFillingQuad.render();
 }
+
+void CVK::ShaderPostProcessing::renderNormalMap()
+{
+    m_screenFillingQuadNormalMap.render();
+}
+
 
 void CVK::ShaderPostProcessing::renderZED()
 {
