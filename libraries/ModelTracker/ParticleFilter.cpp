@@ -51,21 +51,21 @@ void mt::ParticleFilter::mapGLTextureToCudaArray(GLuint texture_id, cudaArray_t 
 void mt::ParticleFilter::calculateWeightColor(sl::Mat in, mt::ParticleGrid &particleGrid)
 {
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_color_weight_memory, m_color_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
-    mt::calculateWeight(in, dev_color_weight_memory, m_color_texture_array, particleGrid);
+    mt::calculateWeight(in, dev_color_weight_memory, m_color_texture_array, particleGrid, COLOR);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_color_weight_memory, dev_color_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
 void mt::ParticleFilter::calculateWeightDepth(sl::Mat in, mt::ParticleGrid &particleGrid)
 {
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_depth_weight_memory, m_depth_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
-    mt::calculateWeight(in, dev_depth_weight_memory, m_depth_texture_array, particleGrid);
+    mt::calculateWeight(in, dev_depth_weight_memory, m_depth_texture_array, particleGrid, DEPTH);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_depth_weight_memory, dev_depth_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
 void mt::ParticleFilter::calculateWeightNormals(sl::Mat in, mt::ParticleGrid &particleGrid)
 {
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_normals_weight_memory, m_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
-    mt::calculateWeight(in, dev_normals_weight_memory, m_normals_texture_array, particleGrid);
+    mt::calculateWeight(in, dev_normals_weight_memory, m_normals_texture_array, particleGrid, NORMAL);
     HANDLE_CUDA_ERROR(cudaMemcpy(m_normals_weight_memory, dev_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyDeviceToHost));
 }
 
@@ -98,11 +98,22 @@ void mt::ParticleFilter::setParticleWeight(mt::ParticleGrid &particleGrid)
 
 void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
 {
+    particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
+
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dis(0, threshold-1);
+
+    std::vector<Particle> tmp;
+    for (int n=0; n<m_particle_count; ++n)
+        tmp.push_back(particleGrid.m_particles.at(dis(gen)));
+
+    particleGrid.m_particles = tmp;
+/*
     //printf("RESAMPLE DEBUG\n");
 
-    particleGrid.sortParticlesByWeight();     // DO IT IN MAIN CODE
     //printf("HEAVIEST PARTICLE: %f \n", heaviest_particle.getWeight());
-/*
+
     for (int i = 0; i < threshold; i++)
     {
         m_top_particles.push_back(particleGrid.m_particles[i]);
@@ -133,17 +144,16 @@ void mt::ParticleFilter::resample(mt::ParticleGrid &particleGrid, int threshold)
             pick += pick;
         }
     }
+
+    m_top_particles.clear();
 */
-    std::random_device rd;  //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> dis(0, threshold-1);
+}
 
-    std::vector<Particle> tmp;
-    for (int n=0; n<m_particle_count; ++n)
-        tmp.push_back(particleGrid.m_particles.at(dis(gen)));
-
-    particleGrid.m_particles = tmp;
-
-
-   // m_top_particles.clear();
+void mt::ParticleFilter::clear()
+{
+    cudaFree(dev_color_weight_memory);
+    cudaFree(dev_depth_weight_memory);
+    cudaFree(dev_normals_weight_memory);
+    cudaFree(dev_edge_weight_memory);
+    printf("CLEAN UP PARTICLE FILTER CUDA MEMORY \n");
 }

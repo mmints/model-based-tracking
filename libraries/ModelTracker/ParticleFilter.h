@@ -21,10 +21,6 @@ private:
     // Parameter
     int m_particle_count;
 
-    // Resampling
-    std::vector<mt::Particle> m_top_particles;
-
-
     // Weight array memory space
     float *m_color_weight_memory;
     float *m_depth_weight_memory;
@@ -57,6 +53,8 @@ public:
 
     void setParticleWeight(ParticleGrid &particleGrid);
     void resample(ParticleGrid &particleGrid, int threshold);
+
+    void clear();
 };
 
 }
