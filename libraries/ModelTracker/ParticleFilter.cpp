@@ -32,6 +32,8 @@ mt::ParticleFilter::ParticleFilter(mt::ParticleGrid &particleGrid)
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_normals_weight_memory, m_normals_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
     HANDLE_CUDA_ERROR(cudaMemcpy(dev_edge_weight_memory, m_edge_weight_memory, m_particle_count * sizeof(float), cudaMemcpyHostToDevice));
 
+    usleep(2000000);    // Wait for 2 Sec
+
     // Register and map texture to CudaArray
     mapGLTextureToCudaArray(particleGrid.getColorTexture(), m_color_texture_array);
     mapGLTextureToCudaArray(particleGrid.getDepthTexture(), m_depth_texture_array);

@@ -14,7 +14,7 @@ __device__ float edgeWeight(const uchar4 &particle_pixel, const sl::uchar1 &zed_
     return weight;
 }
 
-__global__ void calculateWeightKernel(sl::uchar1 *zed_in, size_t step, int particle_scale,
+__global__ void calculateWeightKernelEdge(sl::uchar1 *zed_in, size_t step, int particle_scale,
                                       int particle_grid_dimension, int particle_width, int particle_height,
                                       float *weight_memory)
 {
@@ -63,7 +63,7 @@ void mt::calculateWeightEdge(const sl::Mat &in_zed, float *dev_weight_memory, cu
     dimGrid.x = (particle_width * particle_gird_dimension + dimBlock.x - 1) / dimBlock.x;
     dimGrid.y = (particle_height * particle_gird_dimension + dimBlock.y - 1) / dimBlock.y;
 
-    calculateWeightKernel<<<dimGrid, dimBlock>>>(in_zed_ptr, step, particle_scale,
+    calculateWeightKernelEdge<<<dimGrid, dimBlock>>>(in_zed_ptr, step, particle_scale,
             particle_gird_dimension, particle_width, particle_height,
             dev_weight_memory);
 
