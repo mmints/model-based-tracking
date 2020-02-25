@@ -1,10 +1,15 @@
-from mpl_toolkits.mplot3d import axes3d
-import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-X, Y, Z = [1,2,3,4,5,6,7,8,9,10],[5,6,2,3,13,4,1,2,4,8],[2,3,3,3,5,7,9,11,9,10]
-ax.plot_wireframe(X, Y, Z)
+delta = pd.read_csv('normal.csv')
 
-plt.show() 
+d_x = delta[['Frame ID', 'X']]
+d_y = delta[['Frame ID', 'Y']]
+d_z = delta[['Frame ID', 'Z']]
+
+chart_x = sns.scatterplot(x="Frame ID", y="X", data=d_x) # blue
+chart_y = sns.scatterplot(x="Frame ID", y="Y", data=d_y) # orange
+chart_z = sns.scatterplot(x="Frame ID", y="Z", data=d_z) # green
+
+plt.show()
