@@ -1,0 +1,11 @@
+#ifndef MT_LIKELIHOOD_TYPES_H
+#define MT_LIKELIHOOD_TYPES_H
+
+enum LIKELIHOOD{
+    COLOR,
+    DEPTH,
+    NORMAL,
+    EDGE
+};
+
+#endif //MT_LIKELIHOOD_TYPES_H

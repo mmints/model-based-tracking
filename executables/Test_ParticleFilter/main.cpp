@@ -9,10 +9,10 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-#define PARTICLE_COUNT 400
+#define PARTICLE_COUNT 16*16
 
-#define PARTICLE_WIDTH WIDTH   / 3
-#define PARTICLE_HEIGHT HEIGHT / 3
+#define PARTICLE_WIDTH WIDTH   / 2
+#define PARTICLE_HEIGHT HEIGHT / 2
 
 using namespace sl;
 
@@ -52,6 +52,8 @@ int main(int argc, char **argv)
     Mat img_raw  =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
     Mat img_rgb =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
 
+    Mat img_normals =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C4, MEM_GPU);
+
     Mat img_gs =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C1, MEM_GPU);
     Mat img_edge =  Mat(WIDTH, HEIGHT, MAT_TYPE_8U_C1, MEM_GPU);
 
@@ -64,6 +66,7 @@ int main(int argc, char **argv)
         zed.grab();
         HANDLE_ZED_ERROR(zed.retrieveImage(img_raw, VIEW_LEFT, MEM_GPU));
         HANDLE_ZED_ERROR(zed.retrieveImage(img_gs, VIEW_LEFT_GRAY, MEM_GPU));
+        HANDLE_ZED_ERROR(zed.retrieveImage(img_normals, VIEW_NORMALS, MEM_GPU));
 
         // Preprocessing ZED
         filter::convertBGRtoRGB(img_raw, img_rgb);
@@ -74,7 +77,8 @@ int main(int argc, char **argv)
         zedAdapter.renderImage();
 
         // Particle Filter routine
-        particleFilter.calculateWeightColor(img_rgb, particleGrid);
+        //particleFilter.calculateWeightColor(img_rgb, particleGrid);
+        particleFilter.calculateWeightNormals(img_normals, particleGrid);
         particleFilter.calculateWeightEdge(img_edge, particleGrid);
         particleFilter.setParticleWeight(particleGrid);
         particleFilter.resample(particleGrid, (int)PARTICLE_COUNT * 0.2f);

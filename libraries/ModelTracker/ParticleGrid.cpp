@@ -1,4 +1,5 @@
 #include "ParticleGrid.h"
+#include <unistd.h>
 
 using namespace mt;
 
@@ -48,6 +49,7 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     m_normals_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_depth_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
     m_edge_fbo = new CVK::FBO(m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height, 1, true);
+    glFinish();
 
     printf("[ParticleFilter] FBO Resolution: %i x %i \n", m_particle_grid_dimension * particle_width, m_particle_grid_dimension * particle_height);
 
@@ -58,6 +60,8 @@ ParticleGrid::ParticleGrid(std::string path_to_model, int particle_width, int pa
     CVK::State::getInstance()->setBackgroundColor(BLACK);
     glm::vec3 BgCol = CVK::State::getInstance()->getBackgroundColor();
     glClearColor( BgCol.r, BgCol.g, BgCol.b, 0.0);
+
+    usleep(2000000);    // Wait for 2 Sec
 }
 
 void ParticleGrid::update(float rotation_deviation, float translation_deviation)
@@ -216,6 +220,8 @@ void ParticleGrid::renderFirstParticleToScreen()
 
 void ParticleGrid::initializeParticles(int particle_count, int width, int height)
 {
+    printf("PARTICLE GRID INIT - START \n ");
+    //glm::vec3 scene_center = glm::vec3(2.8f, 0.f, 0.f);
     glm::vec3 scene_center = glm::vec3(0.f);
     glm::vec3 rotation_angles= glm::vec3(0.f);;
 
@@ -224,6 +230,10 @@ void ParticleGrid::initializeParticles(int particle_count, int width, int height
         mt::Particle particle(width, height, 0.f, scene_center, rotation_angles);
         m_particles.push_back(particle);
     }
+    renderAllTextures();
+    glFinish();
+    printf(" \n PARTICLE GRID INIT - DONE \n ");
+
 }
 
 void ParticleGrid::renderParticleGrid()
