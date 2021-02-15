@@ -1,4 +1,4 @@
-# Batchelor Thesis: Model-Based Tracking with GPU-Accelerated Particle Filter Estimation and Stereo Vision
+# Bachelor Thesis: Model-Based Tracking with GPU-Accelerated Particle Filter Estimation and Stereo Vision
 
 Tracking is one of the largest application providers of computer vision and computer graphics.
 Model-based tracking is a widespread implementation that has received much attention in recent years.
